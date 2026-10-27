@@ -11,7 +11,7 @@ module.exports = async (req, res) => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           chat_id: msg.chat.id,
-          text: "O'yinni boshlash uchun pastdagi boshlash tugmasini bosing!",
+          text: `O'yinni boshlash uchun pastdagi "Boshlash" tugmasini bosing!👇🏻`,
         }),
       },
     );
