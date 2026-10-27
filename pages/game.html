@@ -7,13 +7,26 @@
     <title>Dictionary game</title>
     <style>
       @keyframes shake {
-        0%, 100% { transform: translateX(0); }
-        20% { transform: translateX(-6px); }
-        40% { transform: translateX(6px); }
-        60% { transform: translateX(-4px); }
-        80% { transform: translateX(4px); }
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-6px);
+        }
+        40% {
+          transform: translateX(6px);
+        }
+        60% {
+          transform: translateX(-4px);
+        }
+        80% {
+          transform: translateX(4px);
+        }
       }
-      .shake { animation: shake 0.4s ease-in-out; }
+      .shake {
+        animation: shake 0.4s ease-in-out;
+      }
     </style>
   </head>
   <body class="bg-base-200 min-h-dvh flex items-center justify-center p-4">
@@ -76,6 +89,24 @@
           <span id="timer" class="w-8 text-right text-xs font-bold opacity-70">
             15s
           </span>
+        </div>
+
+        <!-- Boshqaruv tugmalari -->
+        <div class="flex w-full max-w-xs gap-3">
+          <button
+            id="finish-btn"
+            type="button"
+            class="btn btn-outline btn-error btn-sm flex-1"
+          >
+            ⏹ Tugatish
+          </button>
+          <button
+            id="skip-btn"
+            type="button"
+            class="btn btn-outline btn-warning btn-sm flex-1"
+          >
+            Keyingi ⏭
+          </button>
         </div>
       </div>
     </main>

@@ -8,20 +8,25 @@ const timerBar = document.getElementById("timer-bar");
 const messageEl = document.getElementById("message");
 const progressBadge = document.getElementById("progress-badge");
 const scoreBadge = document.getElementById("score-badge");
+const skipBtn = document.getElementById("skip-btn");
+const finishBtn = document.getElementById("finish-btn");
 
 const TIME_LIMIT = 15;
-const SUCCESS_DELAY = 1000; // to'g'ri topilgach kutish vaqti
-const ERROR_DELAY = 700; // xatodan keyin tozalash vaqti
-const TIMEOUT_DELAY = 3000; // vaqt tugaganda javobni ko'rsatish vaqti
+const SUCCESS_DELAY = 1000;
+const ERROR_DELAY = 700;
+const TIMEOUT_DELAY = 3000;
 
 let gameWords = [];
 let currentIndex = 0;
 let score = 0;
+let attempted = 0; // yakunlangan (topilgan, o'tkazilgan, vaqti tugagan) so'zlar soni
 let totalTimeSpent = 0;
 let timer = null;
+let pendingTimeout = null; // kutish paytidagi setTimeout
 let timeLeft = TIME_LIMIT;
 let currentWordObj = null;
 let locked = false;
+let finished = false;
 
 const BASE_CLASS =
   "w-9 h-12 sm:w-12 sm:h-14 shrink-0 border-2 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold uppercase bg-base-100 transition-all duration-200";
@@ -91,10 +96,15 @@ function renderTimer() {
   }
 }
 
-// Inputni tozalash va kursorni boshiga qo'yish
 function clearInput() {
   inputEl.value = "";
   inputEl.setSelectionRange(0, 0);
+}
+
+// Kutish paytidagi amalni bitta joyda boshqaramiz
+function later(fn, ms) {
+  clearTimeout(pendingTimeout);
+  pendingTimeout = setTimeout(fn, ms);
 }
 
 async function initGame() {
@@ -120,6 +130,8 @@ async function initGame() {
 }
 
 function loadNextWord() {
+  if (finished) return;
+
   if (currentIndex >= gameWords.length) {
     finishGame();
     return;
@@ -136,10 +148,8 @@ function loadNextWord() {
   scoreBadge.textContent = `✓ ${score}`;
   setMessage("", null);
 
-  // Eski katakchalarni tozalaymiz
   getSpans().forEach((s) => s.remove());
 
-  // Yangi katakchalar (input har doim oxirida qoladi)
   for (let i = 0; i < enWord.length; i++) {
     const span = document.createElement("span");
     span.className = BASE_CLASS;
@@ -174,22 +184,56 @@ function startTimer() {
 
 function handleTimeout() {
   locked = true;
+  attempted++;
   totalTimeSpent += TIME_LIMIT;
 
-  // To'g'ri javobni xato rangida ko'rsatamiz
   const answer = currentWordObj.en.toLowerCase();
   setState("error");
   updateBoxes(answer);
   setMessage("Vaqt tugadi!", "error");
   shake();
 
-  setTimeout(() => {
+  later(() => {
     currentIndex++;
     loadNextWord();
   }, TIMEOUT_DELAY);
 }
 
-// Input fokusda bo'lmasa, qayta fokus qilamiz (har bosishda emas)
+// KEYINGI: so'zni o'tkazib yuboramiz (xato hisoblanadi)
+function skipWord() {
+  if (locked || finished || !currentWordObj) return;
+
+  locked = true;
+  clearInterval(timer);
+  attempted++;
+  totalTimeSpent += TIME_LIMIT - timeLeft;
+
+  // To'g'ri javobni ko'rsatamiz
+  setState("error");
+  updateBoxes(currentWordObj.en.toLowerCase());
+  setMessage("O'tkazib yuborildi", "error");
+
+  later(() => {
+    currentIndex++;
+    loadNextWord();
+  }, 1200);
+}
+
+// Tugmalar bosilganda klaviatura yopilib qolmasligi uchun fokus olinmaydi
+[skipBtn, finishBtn].forEach((btn) =>
+  btn.addEventListener("mousedown", (e) => e.preventDefault()),
+);
+
+skipBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  skipWord();
+});
+
+finishBtn.addEventListener("click", (e) => {
+  e.stopPropagation();
+  finishGame();
+});
+
 document.addEventListener("click", () => {
   if (document.activeElement !== inputEl) inputEl.focus();
 });
@@ -202,12 +246,8 @@ inputEl.addEventListener("input", (e) => {
 
   const wordLen = currentWordObj.en.length;
 
-  // Bo'sh joylarni olib tashlaymiz va uzunlikni o'zimiz cheklaymiz
-  // (telefonda maxLength ba'zan ishonchsiz ishlaydi)
   let val = e.target.value.toLowerCase().replace(/\s/g, "").slice(0, wordLen);
 
-  // Qiymatni tozalab qaytaramiz va kursorni doim oxiriga qo'yamiz.
-  // Telefonda harflar teskari tushmasligi uchun shu muhim.
   if (e.target.value !== val) e.target.value = val;
   e.target.setSelectionRange(val.length, val.length);
 
@@ -218,9 +258,9 @@ inputEl.addEventListener("input", (e) => {
   locked = true;
 
   if (val === currentWordObj.en.toLowerCase()) {
-    // TO'G'RI: taymer to'xtaydi, biroz kutib keyingi so'zga o'tadi
     clearInterval(timer);
     score++;
+    attempted++;
     totalTimeSpent += TIME_LIMIT - timeLeft;
 
     setState("success");
@@ -228,18 +268,17 @@ inputEl.addEventListener("input", (e) => {
     scoreBadge.textContent = `✓ ${score}`;
     setMessage("To'g'ri! 🎉", "success");
 
-    setTimeout(() => {
+    later(() => {
       currentIndex++;
       loadNextWord();
     }, SUCCESS_DELAY);
   } else {
-    // XATO: taymer davom etadi, katakchalar tozalanadi
     setState("error");
     updateBoxes(val);
     setMessage("Xato, qayta urinib ko'ring", "error");
     shake();
 
-    setTimeout(() => {
+    later(() => {
       clearInput();
       setState("warning");
       updateBoxes("");
@@ -250,12 +289,20 @@ inputEl.addEventListener("input", (e) => {
   }
 });
 
+// O'yin o'zi tugaganda ham, "Tugatish" bosilganda ham shu ishlaydi
 function finishGame() {
-  const avgTime = (totalTimeSpent / gameWords.length).toFixed(1);
+  if (finished) return;
+  finished = true;
+
+  clearInterval(timer);
+  clearTimeout(pendingTimeout);
+
+  const avgTime =
+    attempted > 0 ? (totalTimeSpent / attempted).toFixed(1) : "0.0";
 
   const resultData = {
     score: score,
-    total: gameWords.length,
+    total: attempted, // faqat yakunlangan so'zlar hisobga olinadi
     avgTime: avgTime,
   };
 

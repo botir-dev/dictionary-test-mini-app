@@ -4514,6 +4514,11 @@
       --btn-soft-bg: var(--color-neutral-content) 80%;
       --btn-rest-fg: initial;
     }
+    .btn-error {
+      --btn-color: var(--color-error);
+      --btn-fg: var(--color-error-content);
+      --btn-soft-bg: initial;
+    }
     .btn-lg {
       --fontsize: 1.125rem;
       --btn-p: 1.25rem;
