@@ -1,7 +1,7 @@
 import { generateGameWords } from "./functions.js";
 
 const boxesEl = document.getElementById("word-boxes");
-const inputEl = boxesEl.querySelector("input");
+const inputEl = document.getElementById("word-input");
 const meaningEl = document.getElementById("word-meaning");
 const timerEl = document.getElementById("timer");
 const timerBar = document.getElementById("timer-bar");
@@ -91,6 +91,12 @@ function renderTimer() {
   }
 }
 
+// Inputni tozalash va kursorni boshiga qo'yish
+function clearInput() {
+  inputEl.value = "";
+  inputEl.setSelectionRange(0, 0);
+}
+
 async function initGame() {
   const savedLevels = localStorage.getItem("selectedLevels");
   const selectedLvl = savedLevels ? JSON.parse(savedLevels) : ["all"];
@@ -133,7 +139,7 @@ function loadNextWord() {
   // Eski katakchalarni tozalaymiz
   getSpans().forEach((s) => s.remove());
 
-  // Yangi katakchalar
+  // Yangi katakchalar (input har doim oxirida qoladi)
   for (let i = 0; i < enWord.length; i++) {
     const span = document.createElement("span");
     span.className = BASE_CLASS;
@@ -143,8 +149,7 @@ function loadNextWord() {
   setState("warning");
   updateBoxes("");
 
-  inputEl.value = "";
-  inputEl.maxLength = enWord.length;
+  clearInput();
   locked = false;
   inputEl.focus();
 
@@ -184,26 +189,36 @@ function handleTimeout() {
   }, TIMEOUT_DELAY);
 }
 
-// Sahifaning istalgan joyiga bosganda input fokusda qolsin
+// Input fokusda bo'lmasa, qayta fokus qilamiz (har bosishda emas)
 document.addEventListener("click", () => {
-  inputEl.focus();
+  if (document.activeElement !== inputEl) inputEl.focus();
 });
 
 inputEl.addEventListener("input", (e) => {
   if (locked) {
-    e.target.value = "";
+    clearInput();
     return;
   }
 
-  const val = e.target.value.toLowerCase();
+  const wordLen = currentWordObj.en.length;
+
+  // Bo'sh joylarni olib tashlaymiz va uzunlikni o'zimiz cheklaymiz
+  // (telefonda maxLength ba'zan ishonchsiz ishlaydi)
+  let val = e.target.value.toLowerCase().replace(/\s/g, "").slice(0, wordLen);
+
+  // Qiymatni tozalab qaytaramiz va kursorni doim oxiriga qo'yamiz.
+  // Telefonda harflar teskari tushmasligi uchun shu muhim.
+  if (e.target.value !== val) e.target.value = val;
+  e.target.setSelectionRange(val.length, val.length);
+
   updateBoxes(val);
 
-  if (val.length !== currentWordObj.en.length) return;
+  if (val.length !== wordLen) return;
 
   locked = true;
 
   if (val === currentWordObj.en.toLowerCase()) {
-    // TO'G'RI: taymer to'xtaydi, 3 soniya kutib keyingi so'zga o'tadi
+    // TO'G'RI: taymer to'xtaydi, biroz kutib keyingi so'zga o'tadi
     clearInterval(timer);
     score++;
     totalTimeSpent += TIME_LIMIT - timeLeft;
@@ -218,13 +233,14 @@ inputEl.addEventListener("input", (e) => {
       loadNextWord();
     }, SUCCESS_DELAY);
   } else {
+    // XATO: taymer davom etadi, katakchalar tozalanadi
     setState("error");
     updateBoxes(val);
     setMessage("Xato, qayta urinib ko'ring", "error");
     shake();
 
     setTimeout(() => {
-      inputEl.value = "";
+      clearInput();
       setState("warning");
       updateBoxes("");
       setMessage("", null);

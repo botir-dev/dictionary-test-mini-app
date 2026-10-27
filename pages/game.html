@@ -7,29 +7,16 @@
     <title>Dictionary game</title>
     <style>
       @keyframes shake {
-        0%,
-        100% {
-          transform: translateX(0);
-        }
-        20% {
-          transform: translateX(-6px);
-        }
-        40% {
-          transform: translateX(6px);
-        }
-        60% {
-          transform: translateX(-4px);
-        }
-        80% {
-          transform: translateX(4px);
-        }
+        0%, 100% { transform: translateX(0); }
+        20% { transform: translateX(-6px); }
+        40% { transform: translateX(6px); }
+        60% { transform: translateX(-4px); }
+        80% { transform: translateX(4px); }
       }
-      .shake {
-        animation: shake 0.4s ease-in-out;
-      }
+      .shake { animation: shake 0.4s ease-in-out; }
     </style>
   </head>
-  <body class="bg-base-200 min-h-screen flex items-center justify-center p-4">
+  <body class="bg-base-200 min-h-dvh flex items-center justify-center p-4">
     <main class="card w-full max-w-xl bg-base-100 shadow-xl">
       <div class="card-body items-center gap-6">
         <!-- Yuqori panel: so'z raqami va ball -->
@@ -51,21 +38,27 @@
             id="word-meaning"
             class="text-3xl sm:text-4xl font-extrabold text-primary mt-1"
           >
-            yuklanmoqda...
+            Yuklanmoqda...
           </h2>
         </div>
 
         <!-- Harf katakchalari -->
         <div
           id="word-boxes"
-          class="flex flex-wrap items-center justify-center gap-2 min-h-14"
+          class="relative flex flex-wrap items-center justify-center gap-2 min-h-14 w-full"
         >
+          <!-- Input katakchalar ustiga yoyilgan, lekin ko'rinmaydi -->
           <input
+            id="word-input"
             type="text"
             autocomplete="off"
-            autocapitalize="off"
+            autocapitalize="none"
+            autocorrect="off"
             spellcheck="false"
-            class="absolute opacity-0 w-0 h-0 pointer-events-none"
+            enterkeyhint="done"
+            data-gramm="false"
+            aria-label="Inglizcha so'zni yozing"
+            class="absolute inset-0 z-10 h-full w-full opacity-0 text-base caret-transparent"
           />
         </div>
 
