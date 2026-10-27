@@ -2,10 +2,6 @@
   {
     "a1": [
       {
-        "en": "a, an",
-        "uz": ["bir (noaniq artikl)"]
-      },
-      {
         "en": "about",
         "uz": ["haqida", "taxminan"]
       },
@@ -266,10 +262,6 @@
         "uz": ["chunki"]
       },
       {
-        "en": "because of",
-        "uz": ["sababli"]
-      },
-      {
         "en": "become",
         "uz": ["bo'lmoq", "aylanmoq"]
       },
@@ -292,10 +284,6 @@
       {
         "en": "begin",
         "uz": ["boshlamoq"]
-      },
-      {
-        "en": "beginning",
-        "uz": ["boshlanish", "boshi"]
       },
       {
         "en": "behind",
@@ -674,10 +662,6 @@
         "uz": ["pishirmoq", "oshpaz"]
       },
       {
-        "en": "cooking",
-        "uz": ["ovqat pishirish"]
-      },
-      {
         "en": "cool",
         "uz": ["salqin", "zo'r"]
       },
@@ -688,10 +672,6 @@
       {
         "en": "cost",
         "uz": ["narx", "turmoq"]
-      },
-      {
-        "en": "could",
-        "uz": ["qila olardi", "mumkin edi"]
       },
       {
         "en": "country",
@@ -1407,7 +1387,7 @@
       },
       {
         "en": "he",
-        "uz": ["u", "ul"]
+        "uz": ["u (o'g'il bolaga nisbatan)"]
       },
       {
         "en": "head",
@@ -1435,15 +1415,11 @@
       },
       {
         "en": "her",
-        "uz": ["uning", "uni"]
+        "uz": ["uni, uning (qiz bolaga nisbatan)"]
       },
       {
         "en": "here",
         "uz": ["bu yerda", "mana"]
-      },
-      {
-        "en": "hey",
-        "uz": ["hoy", "salom"]
       },
       {
         "en": "hi",
@@ -1455,11 +1431,11 @@
       },
       {
         "en": "him",
-        "uz": ["uni", "unga"]
+        "uz": ["uni unga (o'g'il bolaga nisbatan)"]
       },
       {
         "en": "his",
-        "uz": ["uning", "uniki"]
+        "uz": ["uning, uniki (o'g'il bolaga nisbatan)"]
       },
       {
         "en": "history",
@@ -1467,7 +1443,7 @@
       },
       {
         "en": "hobby",
-        "uz": ["sevimli mashg'ulot", "hobbi"]
+        "uz": ["sevimli mashg'ulot"]
       },
       {
         "en": "holiday",
@@ -1507,7 +1483,7 @@
       },
       {
         "en": "house",
-        "uz": ["uy", "xonadon"]
+        "uz": ["uy"]
       },
       {
         "en": "how",
@@ -1527,7 +1503,7 @@
       },
       {
         "en": "husband",
-        "uz": ["er", "turmush o'rtog'i"]
+        "uz": ["er"]
       },
       {
         "en": "I",
@@ -1563,7 +1539,7 @@
       },
       {
         "en": "in",
-        "uz": ["ichida", "da"]
+        "uz": ["ichida"]
       },
       {
         "en": "include",
@@ -1607,11 +1583,11 @@
       },
       {
         "en": "it",
-        "uz": ["u", "bu"]
+        "uz": ["u, bu (jonsiz narsalarga nisbatan)"]
       },
       {
         "en": "its",
-        "uz": ["uning", "buning"]
+        "uz": ["uning (jonsiz narsalarga nisbatan)"]
       },
       {
         "en": "jacket",
@@ -1871,7 +1847,7 @@
       },
       {
         "en": "mean",
-        "uz": ["anglatmoq"]
+        "uz": ["anglatmoq", "yovuz"]
       },
       {
         "en": "meaning",
@@ -1911,7 +1887,7 @@
       },
       {
         "en": "mile",
-        "uz": ["mil"]
+        "uz": ["mil", "chaqirim"]
       },
       {
         "en": "milk",
@@ -1971,7 +1947,7 @@
       },
       {
         "en": "mother",
-        "uz": ["ona", "oyi"]
+        "uz": ["ona"]
       },
       {
         "en": "mountain",
@@ -1999,7 +1975,7 @@
       },
       {
         "en": "mum",
-        "uz": ["oyi", "ona"]
+        "uz": ["oyi"]
       },
       {
         "en": "museum",
@@ -2160,10 +2136,6 @@
       {
         "en": "often",
         "uz": ["tez-tez", "ko'pincha"]
-      },
-      {
-        "en": "oh",
-        "uz": ["oh", "ey"]
       },
       {
         "en": "OK",
@@ -2723,7 +2695,7 @@
       },
       {
         "en": "she",
-        "uz": ["u", "ul"]
+        "uz": ["u (qiz bolaga nisbatan)"]
       },
       {
         "en": "sheep",
@@ -2731,7 +2703,7 @@
       },
       {
         "en": "shirt",
-        "uz": ["ko'ylak"]
+        "uz": ["rubashka"]
       },
       {
         "en": "shoe",
@@ -3107,11 +3079,7 @@
       },
       {
         "en": "that",
-        "uz": ["u", "o'sha"]
-      },
-      {
-        "en": "the",
-        "uz": ["aniq artikl (tarjima qilinmaydi)"]
+        "uz": ["anavi", "o'sha"]
       },
       {
         "en": "theatre",
@@ -3163,7 +3131,7 @@
       },
       {
         "en": "this",
-        "uz": ["bu"]
+        "uz": ["bu", "shu"]
       },
       {
         "en": "thousand",
@@ -3243,7 +3211,7 @@
       },
       {
         "en": "town",
-        "uz": ["shaharcha", "kichik shahar"]
+        "uz": ["tuman"]
       },
       {
         "en": "traffic",
@@ -3455,7 +3423,7 @@
       },
       {
         "en": "weekend",
-        "uz": ["dam olish kunlari"]
+        "uz": ["hafta oxiri","dam olish kunlari"]
       },
       {
         "en": "welcome",
@@ -3554,10 +3522,6 @@
         "uz": ["dunyo", "olam"]
       },
       {
-        "en": "would",
-        "uz": ["bo'lardi", "edi"]
-      },
-      {
         "en": "write",
         "uz": ["yozmoq"]
       },
@@ -3566,16 +3530,8 @@
         "uz": ["yozuvchi", "muallif"]
       },
       {
-        "en": "writing",
-        "uz": ["yozish", "yozuv"]
-      },
-      {
         "en": "wrong",
         "uz": ["noto'g'ri", "xato"]
-      },
-      {
-        "en": "yeah",
-        "uz": ["ha", "xo'p"]
       },
       {
         "en": "year",
@@ -6801,7 +6757,7 @@
       },
       {
         "en": "wow",
-        "uz": ["vau", "ey"]
+        "uz": ["vau"]
       },
       {
         "en": "yet",
@@ -11706,10 +11662,6 @@
       {
         "en": "gang",
         "uz": ["to'da", "guruh"]
-      },
-      {
-        "en": "gay",
-        "uz": ["gey"]
       },
       {
         "en": "gender",
