@@ -1,4 +1,4 @@
-import { generateGameWords } from "./functions.js";
+import { buildGameWords, loadConfig } from "./modes.js";
 
 const boxesEl = document.getElementById("word-boxes");
 const inputEl = document.getElementById("word-input");
@@ -16,17 +16,20 @@ const SUCCESS_DELAY = 1000;
 const ERROR_DELAY = 700;
 const TIMEOUT_DELAY = 3000;
 
+const config = loadConfig();
+
 let gameWords = [];
 let currentIndex = 0;
 let score = 0;
-let attempted = 0; // yakunlangan (topilgan, o'tkazilgan, vaqti tugagan) so'zlar soni
+let attempted = 0;
 let totalTimeSpent = 0;
 let timer = null;
-let pendingTimeout = null; // kutish paytidagi setTimeout
+let pendingTimeout = null;
 let timeLeft = TIME_LIMIT;
 let currentWordObj = null;
 let locked = false;
 let finished = false;
+let byLevel = {}; // { a1: { asked, correct } }
 
 const BASE_CLASS =
   "w-9 h-12 sm:w-12 sm:h-14 shrink-0 border-2 rounded-xl flex items-center justify-center text-xl sm:text-2xl font-bold uppercase bg-base-100 transition-all duration-200";
@@ -101,27 +104,29 @@ function clearInput() {
   inputEl.setSelectionRange(0, 0);
 }
 
-// Kutish paytidagi amalni bitta joyda boshqaramiz
 function later(fn, ms) {
   clearTimeout(pendingTimeout);
   pendingTimeout = setTimeout(fn, ms);
 }
 
 async function initGame() {
-  const savedLevels = localStorage.getItem("selectedLevels");
-  const selectedLvl = savedLevels ? JSON.parse(savedLevels) : ["all"];
-
   try {
     const response = await fetch("../words.json");
     const wordsData = await response.json();
 
-    gameWords = generateGameWords(wordsData, selectedLvl);
+    gameWords = buildGameWords(wordsData, config);
 
     if (gameWords.length === 0) {
       alert("Tanlangan darajalar bo'yicha so'zlar topilmadi!");
       window.location.href = "../index.html";
       return;
     }
+
+    // Har bir daraja bo'yicha nechta so'z berilganini hisoblaymiz
+    gameWords.forEach((w) => {
+      byLevel[w.lvl] ??= { asked: 0, correct: 0 };
+      byLevel[w.lvl].asked++;
+    });
 
     loadNextWord();
   } catch (error) {
@@ -139,11 +144,9 @@ function loadNextWord() {
 
   currentWordObj = gameWords[currentIndex];
   const enWord = currentWordObj.en;
-  const uzTranslations = currentWordObj.uz;
-  const randomUz =
-    uzTranslations[Math.floor(Math.random() * uzTranslations.length)];
 
-  meaningEl.textContent = randomUz;
+  // Barcha tarjimalar vergul bilan
+  meaningEl.textContent = currentWordObj.uz.join(", ");
   progressBadge.textContent = `So'z ${currentIndex + 1}/${gameWords.length}`;
   scoreBadge.textContent = `✓ ${score}`;
   setMessage("", null);
@@ -187,9 +190,8 @@ function handleTimeout() {
   attempted++;
   totalTimeSpent += TIME_LIMIT;
 
-  const answer = currentWordObj.en.toLowerCase();
   setState("error");
-  updateBoxes(answer);
+  updateBoxes(currentWordObj.en.toLowerCase());
   setMessage("Vaqt tugadi!", "error");
   shake();
 
@@ -199,7 +201,6 @@ function handleTimeout() {
   }, TIMEOUT_DELAY);
 }
 
-// KEYINGI: so'zni o'tkazib yuboramiz (xato hisoblanadi)
 function skipWord() {
   if (locked || finished || !currentWordObj) return;
 
@@ -208,7 +209,6 @@ function skipWord() {
   attempted++;
   totalTimeSpent += TIME_LIMIT - timeLeft;
 
-  // To'g'ri javobni ko'rsatamiz
   setState("error");
   updateBoxes(currentWordObj.en.toLowerCase());
   setMessage("O'tkazib yuborildi", "error");
@@ -219,7 +219,6 @@ function skipWord() {
   }, 1200);
 }
 
-// Tugmalar bosilganda klaviatura yopilib qolmasligi uchun fokus olinmaydi
 [skipBtn, finishBtn].forEach((btn) =>
   btn.addEventListener("mousedown", (e) => e.preventDefault()),
 );
@@ -245,7 +244,6 @@ inputEl.addEventListener("input", (e) => {
   }
 
   const wordLen = currentWordObj.en.length;
-
   let val = e.target.value.toLowerCase().replace(/\s/g, "").slice(0, wordLen);
 
   if (e.target.value !== val) e.target.value = val;
@@ -261,6 +259,7 @@ inputEl.addEventListener("input", (e) => {
     clearInterval(timer);
     score++;
     attempted++;
+    byLevel[currentWordObj.lvl].correct++;
     totalTimeSpent += TIME_LIMIT - timeLeft;
 
     setState("success");
@@ -289,7 +288,6 @@ inputEl.addEventListener("input", (e) => {
   }
 });
 
-// O'yin o'zi tugaganda ham, "Tugatish" bosilganda ham shu ishlaydi
 function finishGame() {
   if (finished) return;
   finished = true;
@@ -297,16 +295,18 @@ function finishGame() {
   clearInterval(timer);
   clearTimeout(pendingTimeout);
 
-  const avgTime =
-    attempted > 0 ? (totalTimeSpent / attempted).toFixed(1) : "0.0";
+  const avgTime = attempted > 0 ? (totalTimeSpent / attempted).toFixed(1) : "0.0";
 
-  const resultData = {
-    score: score,
-    total: attempted, // faqat yakunlangan so'zlar hisobga olinadi
-    avgTime: avgTime,
-  };
-
-  localStorage.setItem("gameResult", JSON.stringify(resultData));
+  localStorage.setItem(
+    "gameResult",
+    JSON.stringify({
+      score,
+      total: gameWords.length, // rejimdagi to'liq so'zlar soni
+      attempted, // haqiqatda yakunlangani
+      avgTime,
+      byLevel,
+    }),
+  );
   window.location.href = "./result.html";
 }
 

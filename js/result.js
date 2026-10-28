@@ -1,10 +1,20 @@
+import { describeConfig, estimateLevel, loadConfig } from "./modes.js";
+
 const raw = localStorage.getItem("gameResult");
 
 if (!raw) {
   window.location.href = "../index.html";
 }
 
-const { score = 0, total = 0, avgTime = "0" } = JSON.parse(raw || "{}");
+const {
+  score = 0,
+  total = 0,
+  attempted = total,
+  avgTime = "0",
+  byLevel = {},
+} = JSON.parse(raw || "{}");
+
+const config = loadConfig();
 
 // ---------- Elementlar ----------
 const $ = (id) => document.getElementById(id);
@@ -20,52 +30,14 @@ const levelBadge = $("level-badge");
 const levelName = $("level-name");
 const levelDesc = $("level-desc");
 const selectedEl = $("selected-levels");
-
-// ---------- Darajalar ----------
-const LEVEL_ORDER = ["A1", "A2", "B1", "B2", "C1", "C2"];
-
-const LEVEL_INFO = {
-  A1: { name: "Boshlang'ich", desc: "Eng oddiy kundalik so'zlarni bilasiz." },
-  A2: { name: "Elementar", desc: "Tanish mavzulardagi so'zlarni yaxshi bilasiz." },
-  B1: { name: "O'rta", desc: "Kundalik muloqot uchun yetarli lug'at bor." },
-  B2: { name: "O'rta-yuqori", desc: "Murakkab matnlarni tushunadigan darajadasiz." },
-  C1: { name: "Ilg'or", desc: "Lug'at boyligingiz juda yaxshi, erkin fikrlay olasiz." },
-  C2: { name: "Mukammal", desc: "Ona tili darajasiga yaqin lug'atga egasiz!" },
-};
-
-// Tanlangan darajalarni o'qiymiz
-let selected;
-try {
-  selected = JSON.parse(localStorage.getItem("selectedLevels")) || ["all"];
-} catch {
-  selected = ["all"];
-}
-if (!Array.isArray(selected) || selected.length === 0) selected = ["all"];
-
-const normalized = selected.map((l) => String(l).toUpperCase());
-const isAll = normalized.includes("ALL");
-const known = normalized.filter((l) => LEVEL_ORDER.includes(l));
-
-selectedEl.textContent = isAll || known.length === 0 ? "Barchasi" : normalized.join(", ");
-
-// Eng qiyin tanlangan daraja
-const maxIdx = isAll || known.length === 0
-  ? LEVEL_ORDER.length - 1
-  : Math.max(...known.map((l) => LEVEL_ORDER.indexOf(l)));
+const incompleteEl = $("incomplete-note");
 
 // ---------- Hisob-kitob ----------
+// Javob berilmagan so'zlar xato hisoblanadi
 const percent = total > 0 ? Math.round((score / total) * 100) : 0;
 const wrong = Math.max(total - score, 0);
-
-function estimateLevel(pct) {
-  let drop;
-  if (pct >= 85) drop = 0;
-  else if (pct >= 70) drop = 1;
-  else if (pct >= 50) drop = 2;
-  else if (pct >= 30) drop = 3;
-  else drop = 4;
-  return LEVEL_ORDER[Math.max(maxIdx - drop, 0)];
-}
+const level =
+  total > 0 ? estimateLevel(config, { score, total, byLevel }) : null;
 
 function getVerdict(pct) {
   if (pct >= 90) return { emoji: "🏆", title: "Ajoyib natija!" };
@@ -75,7 +47,6 @@ function getVerdict(pct) {
   return { emoji: "📚", title: "Mashq qilish kerak" };
 }
 
-const level = total > 0 ? estimateLevel(percent) : null;
 const verdict = getVerdict(percent);
 
 // ---------- Ko'rsatish ----------
@@ -84,18 +55,28 @@ titleEl.textContent = verdict.title;
 subtitleEl.textContent = `${total} ta so'zdan ${score} tasini topdingiz`;
 wrongEl.textContent = wrong;
 timeEl.textContent = `${avgTime}s`;
+selectedEl.textContent = describeConfig(config);
+
+// Test to'liq tugatilmagan bo'lsa ogohlantiramiz
+if (incompleteEl && attempted < total) {
+  incompleteEl.classList.remove("hidden");
+}
 
 if (level) {
-  levelBadge.textContent = level;
-  levelName.textContent = `${level} · ${LEVEL_INFO[level].name}`;
-  levelDesc.textContent = LEVEL_INFO[level].desc;
+  levelBadge.textContent = level.badge;
+  levelName.textContent = `${level.badge} · ${level.name}`;
+  levelDesc.textContent = level.desc;
 } else {
   levelName.textContent = "Aniqlab bo'lmadi";
 }
 
 // Aylana rangi
 const ringColor =
-  percent >= 70 ? "text-success" : percent >= 40 ? "text-warning" : "text-error";
+  percent >= 70
+    ? "text-success"
+    : percent >= 40
+      ? "text-warning"
+      : "text-error";
 ringEl.classList.remove("text-warning");
 ringEl.classList.add(ringColor);
 
@@ -121,6 +102,8 @@ function countUp(el, to, suffix = "", duration = 1000) {
 countUp(percentEl, percent, "%");
 countUp(scoreEl, score);
 
+// ---------- Tugmalar ----------
+// gameConfig localStorage da saqlanib turadi, shuning uchun o'sha rejim bilan qayta boshlanadi
 $("restart-btn").addEventListener("click", () => {
   localStorage.removeItem("gameResult");
   window.location.href = "./game.html";
