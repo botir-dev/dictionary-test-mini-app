@@ -177,10 +177,11 @@ const server = http.createServer(app);
 
 app.use(
   cors({
-    origin: ORIGINS_OR_ORIGIN,
+    origin: CLIENT_ORIGIN,
     allowedHeaders: ["Content-Type", "x-init-data", "x-guest-token"],
   }),
 );
+
 app.use(express.json({ limit: "10kb" }));
 const io = new Server(server, { cors: { origin: ORIGINS } });
 
