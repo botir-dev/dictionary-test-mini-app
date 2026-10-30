@@ -112,35 +112,61 @@ function verifyInitData(initData) {
   }
 }
 
-function getUser(initData) {
-  if (!initData) return null;
-  // Faqat test uchun! Productionda DEV_AUTH ni QO'YMANG.
-  if (DEV_AUTH === "1" && initData.startsWith("dev:")) {
-    try {
-      return JSON.parse(initData.slice(4));
-    } catch {
-      return null;
+const guestCache = new Map();
+
+async function resolveUser(initData, guestToken) {
+  if (initData) {
+    // Faqat lokal test uchun
+    if (DEV_AUTH === "1" && initData.startsWith("dev:")) {
+      try {
+        return JSON.parse(initData.slice(4));
+      } catch {}
     }
+    const u = verifyInitData(initData);
+    if (u) return u;
   }
-  return verifyInitData(initData);
+
+  if (
+    typeof guestToken === "string" &&
+    /^[A-Za-z0-9-]{32,64}$/.test(guestToken)
+  ) {
+    const hash = crypto.createHash("sha256").update(guestToken).digest("hex");
+    let id = guestCache.get(hash);
+    if (!id) {
+      id = Number(await rpc("get_or_create_guest", { p_hash: hash }));
+      guestCache.set(hash, id);
+    }
+    return { id, guest: true, first_name: "Mehmon" };
+  }
+  return null;
 }
 
 const seen = new Map();
 async function ensurePlayer(u) {
   const last = seen.get(u.id);
   if (last && Date.now() - last < 5 * 60e3) return;
-  const { error } = await sb.from("players").upsert(
-    {
-      tg_id: u.id,
-      first_name: u.first_name || "Player",
-      last_name: u.last_name || null,
-      username: u.username || null,
-      photo_url: u.photo_url || null,
-      last_seen: new Date().toISOString(),
-    },
-    { onConflict: "tg_id" }, // yangi o'yinchiga default 150 tanga beriladi
-  );
-  if (error) throw error;
+
+  if (!u.guest) {
+    // Yangi bo'lsa yaratadi (150 tanga), mavjud bo'lsa tegmaydi
+    const { error } = await sb.from("players").upsert(
+      {
+        tg_id: u.id,
+        first_name: u.first_name || "Player",
+        last_name: u.last_name || null,
+        username: u.username || null,
+        photo_url: u.photo_url || null,
+      },
+      { onConflict: "tg_id", ignoreDuplicates: true },
+    );
+    if (error) throw error;
+  }
+
+  const upd = { last_seen: new Date().toISOString() };
+  if (!u.guest) {
+    upd.username = u.username || null;
+    upd.photo_url = u.photo_url || null;
+  }
+  await sb.from("players").update(upd).eq("tg_id", u.id);
   seen.set(u.id, Date.now());
 }
 
@@ -150,7 +176,10 @@ const app = express();
 const server = http.createServer(app);
 
 app.use(
-  cors({ origin: ORIGINS, allowedHeaders: ["Content-Type", "x-init-data"] }),
+  cors({
+    origin: ORIGINS_OR_ORIGIN,
+    allowedHeaders: ["Content-Type", "x-init-data", "x-guest-token"],
+  }),
 );
 app.use(express.json({ limit: "10kb" }));
 const io = new Server(server, { cors: { origin: ORIGINS } });
@@ -159,7 +188,10 @@ app.get("/health", (_, res) => res.json({ ok: true }));
 
 const auth = async (req, res, next) => {
   try {
-    const u = getUser(req.get("x-init-data"));
+    const u = await resolveUser(
+      req.get("x-init-data"),
+      req.get("x-guest-token"),
+    );
     if (!u?.id)
       return res
         .status(401)
@@ -219,7 +251,9 @@ app.get(
   h(async (req, res) => {
     const { data: me } = await sb
       .from("players")
-      .select("*")
+      .select(
+        "tg_id,first_name,last_name,username,photo_url,coins,debt,last_credit_date,wins,games,name_set",
+      )
       .eq("tg_id", req.user.id)
       .single();
     const activeRoom = await getActiveRoom(req.user.id);
@@ -239,6 +273,26 @@ app.post(
     const r = await rpc("claim_credit", { p_tg: req.user.id });
     if (!r.ok) throw new Error(r.error);
     res.json({ ok: true });
+  }),
+);
+
+app.post(
+  "/api/name",
+  auth,
+  h(async (req, res) => {
+    const name = String(req.body?.name ?? "")
+      .replace(/[\u0000-\u001f\u007f<>]/g, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (name.length < 2 || name.length > 30)
+      throw new Error("Ism 2 tadan 30 tagacha belgi bo'lishi kerak");
+
+    const { error } = await sb
+      .from("players")
+      .update({ first_name: name, last_name: null, name_set: true })
+      .eq("tg_id", req.user.id);
+    if (error) throw error;
+    res.json({ ok: true, name });
   }),
 );
 
@@ -535,7 +589,10 @@ async function settle(g) {
 // ---------- Socket ----------
 io.use(async (socket, next) => {
   try {
-    const u = getUser(socket.handshake.auth?.initData || "");
+    const u = await resolveUser(
+      socket.handshake.auth?.initData || "",
+      socket.handshake.auth?.guest,
+    );
     if (!u?.id) return next(new Error("auth"));
     await ensurePlayer(u);
     socket.user = u;

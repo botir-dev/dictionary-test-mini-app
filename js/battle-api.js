@@ -4,34 +4,44 @@ export const tg = window.Telegram?.WebApp;
 tg?.ready();
 tg?.expand();
 
-// Brauzerda test: battle-game.html?dev=101 (har bir tabda boshqa raqam)
+// Brauzerda lokal test: ?dev=101
 const params = new URLSearchParams(location.search);
 const devId = params.get("dev") || sessionStorage.getItem("devId");
 if (devId) sessionStorage.setItem("devId", devId);
 
-const initData =
-  tg?.initData ||
-  (devId
+// Qurilma kaliti: birinchi kirishda yaratiladi
+let memToken = null;
+function guestToken() {
+  try {
+    let t = localStorage.getItem("guestToken");
+    if (!t || t.length < 32) {
+      t = crypto.randomUUID();
+      localStorage.setItem("guestToken", t);
+    }
+    return t;
+  } catch {
+    // localStorage yopiq bo'lsa, faqat shu sessiya uchun
+    return (memToken ??= crypto.randomUUID());
+  }
+}
+
+function getInitData() {
+  if (tg?.initData) return tg.initData;
+  return devId
     ? "dev:" + JSON.stringify({ id: Number(devId), first_name: "Test" + devId })
-    : "");
+    : "";
+}
 
-console.log(
-  "initData:",
-  JSON.stringify(tg?.initData),
-  "platform:",
-  tg?.platform,
-);
-
-export const hasAuth = Boolean(initData);
-
-const NO_AUTH =
-  "Bu sahifa Telegram ichida (bot orqali) ochilishi kerak. Brauzerda sinash uchun manzil oxiriga ?dev=101 qo'shing.";
+export const hasAuth = true;
 
 export async function api(path, { method = "GET", body } = {}) {
-  if (!hasAuth) throw new Error(NO_AUTH);
   const res = await fetch(API_URL + path, {
     method,
-    headers: { "Content-Type": "application/json", "x-init-data": initData },
+    headers: {
+      "Content-Type": "application/json",
+      "x-init-data": getInitData(),
+      "x-guest-token": guestToken(),
+    },
     body: body ? JSON.stringify(body) : undefined,
   });
   const data = await res.json().catch(() => ({}));
@@ -41,11 +51,10 @@ export async function api(path, { method = "GET", body } = {}) {
 
 export const connectSocket = () =>
   window.io(API_URL, {
-    auth: { initData },
+    auth: { initData: getInitData(), guest: guestToken() },
     transports: ["websocket", "polling"],
   });
 
-// Telegram ichida (6.2+) chiroyli oyna, boshqa joyda oddiy alert
 export function notify(msg) {
   try {
     if (tg?.initData && tg.isVersionAtLeast?.("6.2")) {
@@ -56,6 +65,10 @@ export function notify(msg) {
   alert(msg);
 }
 
+export function debugInfo() {
+  return `platform: ${tg?.platform} | initData: ${tg?.initData?.length ?? 0} | url: ${location.pathname}`;
+}
+
 export const esc = (s) =>
   String(s ?? "").replace(
     /[&<>"']/g,
@@ -64,12 +77,3 @@ export const esc = (s) =>
         c
       ],
   );
-
-export function debugInfo() {
-  return [
-    `platform: ${tg?.platform}`,
-    `initData uzunligi: ${tg?.initData?.length ?? 0}`,
-    `hash bor: ${location.hash.includes("tgWebAppData")}`,
-    `url: ${location.pathname}`,
-  ].join(" | ");
-}

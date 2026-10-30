@@ -492,3 +492,10 @@ dialog.bt-modal::backdrop {
 .bt-debt {
   color: var(--bt-err);
 }
+
+.bt-input {
+  width: 100%; padding: 12px 14px; border-radius: 14px;
+  border: 2px solid var(--bt-b3); background: var(--bt-b2);
+  color: var(--bt-txt); font: inherit; font-size: 16px; outline: none;
+}
+.bt-input:focus { border-color: var(--bt-warn); }

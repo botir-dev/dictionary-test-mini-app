@@ -19,7 +19,30 @@
           <div class="bt-user">
             <div id="avatar"><span class="bt-avatar lg">?</span></div>
             <div class="bt-user-info">
-              <p id="p-name" class="bt-name">Yuklanmoqda...</p>
+              <
+              <div
+                style="
+                  display: flex;
+                  align-items: center;
+                  gap: 6px;
+                  min-width: 0;
+                "
+              >
+                <p id="p-name" class="bt-name">Yuklanmoqda...</p>
+                <button
+                  id="edit-name"
+                  class="bt-plus"
+                  style="
+                    width: 24px;
+                    height: 24px;
+                    font-size: 13px;
+                    flex-shrink: 0;
+                  "
+                  aria-label="Ismni o'zgartirish"
+                >
+                  ✎
+                </button>
+              </div>
               <p id="p-user" class="bt-sub"></p>
               <p id="p-stats" class="bt-sub"></p>
             </div>
@@ -140,6 +163,28 @@
         </section>
       </div>
     </main>
+
+    <dialog id="name-modal" class="bt-modal">
+      <h3 class="bt-title" style="margin: 0 0 4px">Ismingizni kiriting</h3>
+      <p class="bt-sub" style="white-space: normal; margin-bottom: 12px">
+        Ism va familiya. Boshqa o'yinchilar sizni shu nom bilan ko'radi,
+        keyinroq o'zgartirishingiz mumkin.
+      </p>
+      <input
+        id="name-input"
+        class="bt-input"
+        maxlength="30"
+        autocomplete="off"
+        placeholder="Masalan: Ali Valiyev"
+      />
+      <p id="name-err" class="bt-hint bt-debt" style="margin: 6px 0 10px"></p>
+      <div style="display: flex; gap: 8px">
+        <button id="name-cancel" class="bt-btn outline" hidden>Bekor</button>
+        <button id="name-save" class="bt-btn primary" style="flex: 1">
+          Saqlash
+        </button>
+      </div>
+    </dialog>
 
     <!-- Tangalar oynasi -->
     <dialog id="coin-modal" class="bt-modal">

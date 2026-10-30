@@ -52,12 +52,59 @@ function renderProfile() {
   $("avatar").innerHTML = avatarHtml(me, true);
 }
 
+// ---------- Ism ----------
+const nameModal = $("name-modal");
+let nameRequired = false;
+
+function openName(required) {
+  nameRequired = required;
+  const full = me.first_name + (me.last_name ? " " + me.last_name : "");
+  $("name-input").value =
+    me.name_set || required === false ? full : full === "Mehmon" ? "" : full;
+  $("name-err").textContent = "";
+  $("name-cancel").hidden = required;
+  if (!nameModal.open) nameModal.showModal();
+  $("name-input").focus();
+}
+
+// Majburiy bo'lsa, Esc bilan yopib bo'lmaydi
+nameModal.addEventListener("cancel", (e) => {
+  if (nameRequired) e.preventDefault();
+});
+$("name-cancel").addEventListener("click", () => nameModal.close());
+$("edit-name").addEventListener("click", () => me && openName(false));
+
+async function saveName() {
+  const v = $("name-input").value.trim();
+  if (v.length < 2) {
+    $("name-err").textContent = "Kamida 2 ta belgi kiriting.";
+    return;
+  }
+  try {
+    $("name-save").disabled = true;
+    await api("/api/name", { method: "POST", body: { name: v } });
+    nameRequired = false;
+    nameModal.close();
+    await refreshMe();
+  } catch (e) {
+    $("name-err").textContent = e.message;
+  } finally {
+    $("name-save").disabled = false;
+  }
+}
+$("name-save").addEventListener("click", saveName);
+$("name-input").addEventListener("keydown", (e) => {
+  if (e.key === "Enter") saveName();
+});
+
 async function refreshMe() {
   const d = await api("/api/me");
   me = d.me;
   activeRoom = d.activeRoom;
   canClaim = d.canClaimCredit;
   renderProfile();
+
+  if (!me.name_set && !nameModal.open) openName(true);
 
   if (activeRoom?.status === "playing") {
     location.href = `./pages/battle-play.html?room=${activeRoom.id}`;
