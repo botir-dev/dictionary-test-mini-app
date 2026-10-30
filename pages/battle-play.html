@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="../output.css" />
+    <title>Battle | Dictionary game</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+      @keyframes shake {
+        0%,
+        100% {
+          transform: translateX(0);
+        }
+        20% {
+          transform: translateX(-6px);
+        }
+        40% {
+          transform: translateX(6px);
+        }
+        60% {
+          transform: translateX(-4px);
+        }
+        80% {
+          transform: translateX(4px);
+        }
+      }
+      .shake {
+        animation: shake 0.4s ease-in-out;
+      }
+      .bar {
+        height: 6px;
+        border-radius: 9999px;
+        background: rgba(128, 128, 128, 0.2);
+        overflow: hidden;
+      }
+      .bar > i {
+        display: block;
+        height: 100%;
+        background: #fabd00;
+        transition: width 0.3s;
+      }
+    </style>
+  </head>
+  <body class="bg-base-200 min-h-dvh flex items-start justify-center p-4">
+    <main class="card w-full max-w-xl bg-base-100 shadow-xl">
+      <div class="card-body gap-5">
+        <!-- Jonli reyting -->
+        <div id="board" class="flex flex-col gap-2"></div>
+
+        <!-- Hisob-kitob oldidan -->
+        <section id="countdown" class="text-center py-6" hidden>
+          <p class="text-sm opacity-60">O'yin boshlanishiga</p>
+          <p id="cd-num" class="text-6xl font-extrabold text-warning">8</p>
+        </section>
+
+        <!-- O'yin -->
+        <section id="game" class="flex flex-col items-center gap-5" hidden>
+          <div class="flex w-full items-center justify-between">
+            <span id="progress-badge" class="badge badge-warning badge-outline"
+              >So'z 1/20</span
+            >
+            <span id="score-badge" class="badge badge-success badge-outline"
+              >✓ 0</span
+            >
+          </div>
+
+          <div class="text-center">
+            <p class="text-xs uppercase tracking-widest opacity-60">
+              Inglizcha yozing
+            </p>
+            <h2
+              id="meaning"
+              class="text-xl sm:text-2xl font-bold text-primary mt-1 leading-snug px-2"
+            ></h2>
+          </div>
+
+          <div
+            id="boxes"
+            class="relative flex flex-wrap items-center justify-center gap-2 min-h-14 w-full"
+          >
+            <input
+              id="word-input"
+              type="text"
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              spellcheck="false"
+              enterkeyhint="done"
+              data-gramm="false"
+              aria-label="Inglizcha so'zni yozing"
+              class="absolute inset-0 z-10 h-full w-full opacity-0 text-base caret-transparent"
+            />
+          </div>
+
+          <p id="message" class="h-5 text-sm font-semibold"></p>
+
+          <div class="flex w-full max-w-xs items-center gap-3">
+            <progress
+              id="timer-bar"
+              class="progress progress-warning h-2 flex-1"
+              value="15"
+              max="15"
+            ></progress>
+            <span id="timer" class="w-8 text-right text-xs font-bold opacity-70"
+              >15s</span
+            >
+          </div>
+
+          <button
+            id="skip-btn"
+            class="btn btn-outline btn-warning btn-sm w-full max-w-xs"
+          >
+            Keyingi ⏭
+          </button>
+        </section>
+
+        <!-- Tugatdi, kutmoqda -->
+        <section id="waiting" class="text-center py-6" hidden>
+          <p class="text-4xl">✅</p>
+          <p class="font-bold mt-2">Tugatdingiz!</p>
+          <p class="text-sm opacity-60">
+            Boshqa o'yinchilar tugatishi kutilmoqda...
+          </p>
+        </section>
+
+        <!-- Natija -->
+        <section id="result" class="flex flex-col gap-3" hidden>
+          <div class="text-center">
+            <p id="r-emoji" class="text-5xl">🏁</p>
+            <h2 id="r-title" class="text-2xl font-extrabold"></h2>
+            <p id="r-coins" class="font-bold mt-1"></p>
+          </div>
+          <div id="r-list" class="flex flex-col gap-2"></div>
+          <a href="../battle-game.html" class="btn btn-warning w-full mt-2"
+            >Lobbiga qaytish</a
+          >
+        </section>
+      </div>
+    </main>
+
+    <script src="../js/battle-play.js" type="module"></script>
+  </body>
+</html>

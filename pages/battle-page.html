@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battle | Dictionary game</title>
+    <link rel="stylesheet" href="./output.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+    <style>
+      [hidden] { display: none !important; }
+      .mode-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+      .lvl-grid { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 0.5rem; }
+      .lvl-grid .lvl { padding-left: 0; padding-right: 0; min-width: 0; }
+      .lvl[aria-pressed="true"] { transform: scale(1.06); }
+      .avatar-sm {
+        width: 2.25rem; height: 2.25rem; border-radius: 9999px; object-fit: cover;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 800; background: rgba(250, 189, 0, 0.2); flex-shrink: 0;
+      }
+    </style>
+  </head>
+  <body class="bg-base-200 min-h-dvh flex items-start justify-center p-4">
+    <main class="card w-full max-w-xl bg-base-100 shadow-xl overflow-hidden">
+      <div class="h-2 w-full bg-linear-to-r from-warning via-primary to-success"></div>
+
+      <div class="card-body gap-5">
+        <!-- Profil + tangalar -->
+        <header class="flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3 min-w-0">
+            <div id="avatar" class="avatar-sm" style="width:3rem;height:3rem">?</div>
+            <div class="min-w-0">
+              <p id="p-name" class="font-extrabold truncate">Yuklanmoqda...</p>
+              <p id="p-user" class="text-xs opacity-60 truncate"></p>
+              <p id="p-stats" class="text-xs opacity-60"></p>
+            </div>
+          </div>
+          <div class="flex items-center gap-1 rounded-full bg-warning/15 pl-3 pr-1 py-1">
+            <span class="font-extrabold">🪙 <span id="coins">0</span></span>
+            <button id="plus-btn" class="btn btn-warning btn-xs btn-circle" aria-label="Tanga qo'shish">+</button>
+          </div>
+        </header>
+
+        <!-- HOME: rejimlar + reyting -->
+        <section id="view-home" class="flex flex-col gap-5">
+          <div>
+            <p class="text-xs uppercase tracking-widest opacity-60 mb-2">Rejimni tanlang</p>
+            <div class="mode-grid">
+              <button data-mode="battle6" class="mode-card rounded-2xl border-2 border-base-300 p-4 text-left transition-all hover:border-warning">
+                <p class="text-3xl">⚔️</p>
+                <p class="font-extrabold mt-1">6 kishilik Battle</p>
+                <p class="text-xs opacity-70">Kirish 5 🪙 · g'olib +25 🪙</p>
+              </button>
+              <button data-mode="duel" class="mode-card rounded-2xl border-2 border-base-300 p-4 text-left transition-all hover:border-warning">
+                <p class="text-3xl">🥊</p>
+                <p class="font-extrabold mt-1">1 vs 1</p>
+                <p class="text-xs opacity-70">Stavka 40 🪙 · g'olib +40 🪙</p>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <div class="tabs tabs-box mb-2" id="lb-tabs">
+              <button class="tab tab-active" data-lb="wins">🏆 G'oliblar</button>
+              <button class="tab" data-lb="coins">🪙 Boylar</button>
+              <button class="tab" data-lb="active">🔥 Faollar</button>
+            </div>
+            <div id="lb-list" class="flex flex-col gap-1"></div>
+          </div>
+
+          <a href="./index.html" class="btn btn-ghost btn-sm">← Oddiy testga qaytish</a>
+        </section>
+
+        <!-- MODE: yaratish + xonalar -->
+        <section id="view-mode" class="flex flex-col gap-5" hidden>
+          <div class="flex items-center justify-between">
+            <button id="back-home" class="btn btn-ghost btn-sm">← Orqaga</button>
+            <h2 id="mode-title" class="font-extrabold text-lg"></h2>
+          </div>
+
+          <div class="rounded-2xl border border-base-300 bg-base-200/60 p-4">
+            <p class="text-xs uppercase tracking-widest opacity-60 mb-2">O'yin yaratish · darajani tanlang</p>
+            <div class="lvl-grid" id="lvl-grid">
+              <button data-l="a1" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">A1</button>
+              <button data-l="a2" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">A2</button>
+              <button data-l="b1" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">B1</button>
+              <button data-l="b2" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">B2</button>
+              <button data-l="c1" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">C1</button>
+              <button data-l="c2" aria-pressed="false" class="lvl btn btn-sm btn-outline btn-neutral rounded-xl font-bold">C2</button>
+            </div>
+            <p class="text-xs opacity-60 mt-2">Bir nechta daraja tanlasangiz, 20 ta so'z ular orasida teng bo'linadi.</p>
+            <button id="create-btn" class="btn btn-warning w-full mt-3">➕ O'yin yaratish</button>
+          </div>
+
+          <div>
+            <p class="text-xs uppercase tracking-widest opacity-60 mb-2">Mavjud o'yinlar</p>
+            <div id="rooms" class="flex flex-col gap-2"></div>
+          </div>
+        </section>
+
+        <!-- WAIT: kutish xonasi -->
+        <section id="view-wait" class="flex flex-col gap-4 items-center text-center" hidden>
+          <p class="text-5xl">⏳</p>
+          <h2 class="font-extrabold text-xl">Raqiblar kutilmoqda...</h2>
+          <p id="wait-meta" class="text-sm opacity-70"></p>
+          <div id="wait-levels" class="flex gap-1 flex-wrap justify-center"></div>
+          <div id="wait-players" class="flex flex-col gap-2 w-full"></div>
+          <button id="leave-btn" class="btn btn-outline btn-error w-full">Chiqish (tanga qaytariladi)</button>
+        </section>
+      </div>
+    </main>
+
+    <!-- Tangalar oynasi -->
+    <dialog id="coin-modal" class="modal">
+      <div class="modal-box">
+        <h3 class="font-extrabold text-lg mb-1">🪙 Tangalar</h3>
+        <p class="text-sm opacity-70 mb-4">Hisobingiz: <b id="m-coins">0</b> <span id="m-debt" class="text-error"></span></p>
+
+        <div class="rounded-2xl border border-base-300 p-4 mb-3">
+          <p class="font-bold">Kredit: 50 tanga</p>
+          <p class="text-xs opacity-70 mb-2">Faqat hisob 0 bo'lganda, kuniga 1 marta. Hisobingiz 100 ga yetganda qarzdan 50 tanga yechiladi.</p>
+          <button id="credit-btn" class="btn btn-warning btn-sm w-full">Kredit olish</button>
+          <p id="credit-note" class="text-xs opacity-60 mt-1"></p>
+        </div>
+
+        <div class="rounded-2xl border border-base-300 p-4">
+          <p class="font-bold">+100 tanga · 10 000 so'm</p>
+          <p class="text-xs opacity-70 mb-2">Donatning 50% qismi moddiy qiyinchilikdagi bolalarning ingliz tili kurslariga yo'naltiriladi.</p>
+          <button class="btn btn-sm w-full" disabled>Tez orada</button>
+        </div>
+
+        <div class="modal-action"><form method="dialog"><button class="btn">Yopish</button></form></div>
+      </div>
+      <form method="dialog" class="modal-backdrop"><button>close</button></form>
+    </dialog>
+
+    <script src="./js/battle.js" type="module"></script>
+  </body>
+</html>

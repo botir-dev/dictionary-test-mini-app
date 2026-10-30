@@ -1,0 +1,1 @@
+export const API_URL = "https://SIZNING-APP.onrender.com";
