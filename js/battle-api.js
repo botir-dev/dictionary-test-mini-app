@@ -11,7 +11,16 @@ if (devId) sessionStorage.setItem("devId", devId);
 
 const initData =
   tg?.initData ||
-  (devId ? "dev:" + JSON.stringify({ id: Number(devId), first_name: "Test" + devId }) : "");
+  (devId
+    ? "dev:" + JSON.stringify({ id: Number(devId), first_name: "Test" + devId })
+    : "");
+
+console.log(
+  "initData:",
+  JSON.stringify(tg?.initData),
+  "platform:",
+  tg?.platform,
+);
 
 export const hasAuth = Boolean(initData);
 
@@ -31,7 +40,10 @@ export async function api(path, { method = "GET", body } = {}) {
 }
 
 export const connectSocket = () =>
-  window.io(API_URL, { auth: { initData }, transports: ["websocket", "polling"] });
+  window.io(API_URL, {
+    auth: { initData },
+    transports: ["websocket", "polling"],
+  });
 
 // Telegram ichida (6.2+) chiroyli oyna, boshqa joyda oddiy alert
 export function notify(msg) {
@@ -45,5 +57,19 @@ export function notify(msg) {
 }
 
 export const esc = (s) =>
-  String(s ?? "").replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
+  String(s ?? "").replace(
+    /[&<>"']/g,
+    (c) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        c
+      ],
+  );
+
+export function debugInfo() {
+  return [
+    `platform: ${tg?.platform}`,
+    `initData uzunligi: ${tg?.initData?.length ?? 0}`,
+    `hash bor: ${location.hash.includes("tgWebAppData")}`,
+    `url: ${location.pathname}`,
+  ].join(" | ");
+}

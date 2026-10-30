@@ -1,4 +1,11 @@
-import { api, connectSocket, notify, esc, hasAuth } from "./battle-api.js";
+import {
+  api,
+  connectSocket,
+  notify,
+  esc,
+  hasAuth,
+  debugInfo,
+} from "./battle-api.js";
 
 const $ = (id) => document.getElementById(id);
 const COIN = '<i class="coin"></i>';
@@ -302,7 +309,8 @@ socket?.on("lobby:changed", () => {
     $("p-name").textContent = "Kirish amalga oshmadi";
     $("avatar").innerHTML = '<span class="bt-avatar lg">!</span>';
     $("error-box").innerHTML = `<span>${esc(e.message)}</span>
-      <button class="bt-btn outline sm" onclick="location.reload()">Qayta urinish</button>`;
+  <small style="opacity:.7">${esc(debugInfo())}</small>
+  <button class="bt-btn outline sm" onclick="location.reload()">Qayta urinish</button>`;
     $("error-box").hidden = false;
     show("none");
   }
