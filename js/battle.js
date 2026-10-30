@@ -311,6 +311,7 @@ socket?.on("lobby:changed", () => {
     $("error-box").innerHTML = `<span>${esc(e.message)}</span>
   <small style="opacity:.7">${esc(debugInfo())}</small>
   <button class="bt-btn outline sm" onclick="location.reload()">Qayta urinish</button>`;
+  
     $("error-box").hidden = false;
     show("none");
   }
