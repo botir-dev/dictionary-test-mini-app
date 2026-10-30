@@ -7,5 +7,5 @@ export const PAY = {
   owner: "BOTIRJON SOBIROV",       // ← karta egasi
   amount: "10 000",
   coins: 100,
-  contact: "@botirdev",
+  contact: "botirdev",
 };
