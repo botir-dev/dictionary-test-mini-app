@@ -40,7 +40,10 @@ let ended = false;
 let lastPlayers = [];
 
 const spans = () => boxesEl.querySelectorAll("span");
-const cleanWord = (s) => String(s).toLowerCase().replace(/[\s'’-]/g, "");
+const cleanWord = (s) =>
+  String(s)
+    .toLowerCase()
+    .replace(/[\s'’-]/g, "");
 
 // ---------- Katakchalar ----------
 function setState(s) {
@@ -77,13 +80,17 @@ function shake() {
 }
 
 function show(name) {
-  ["countdown", "game", "waiting", "result"].forEach((s) => ($(s).hidden = s !== name));
+  ["countdown", "game", "waiting", "result"].forEach(
+    (s) => ($(s).hidden = s !== name),
+  );
 }
 
 // ---------- Jonli reyting ----------
 function renderBoard(players) {
   lastPlayers = players;
-  const sorted = [...players].sort((a, b) => b.correct - a.correct || b.idx - a.idx);
+  const sorted = [...players].sort(
+    (a, b) => b.correct - a.correct || b.idx - a.idx,
+  );
 
   $("board").innerHTML = sorted
     .map((p) => {
@@ -146,10 +153,20 @@ function showResult(res) {
   const mine = res.ranking.find((r) => r.tg_id === myId);
   const won = mine?.place === 1;
 
-  $("r-emoji").textContent = won ? "🏆" : mine?.place === 2 ? "🥈" : mine?.place === 3 ? "🥉" : "🏁";
-  $("r-title").textContent = won ? "Siz g'olibsiz!" : `${mine?.place ?? "-"}-o'rin`;
-  $("r-coins").textContent = won ? `+${res.pot - res.fee} tanga` : `-${res.fee} tanga`;
-  $("r-coins").className = "font-bold mt-1 " + (won ? "text-success" : "text-error");
+  $("r-emoji").textContent = won
+    ? "🏆"
+    : mine?.place === 2
+      ? "🥈"
+      : mine?.place === 3
+        ? "🥉"
+        : "🏁";
+  $("r-title").textContent = won
+    ? "Siz g'olibsiz!"
+    : `${mine?.place ?? "-"}-o'rin`;
+  const net = mine?.net ?? 0;
+  $("r-coins").textContent = `${net > 0 ? "+" : ""}${net} tanga`;
+  $("r-coins").className =
+    "font-bold mt-1 " + (net > 0 ? "text-success" : "text-error");
 
   const medal = ["🥇", "🥈", "🥉"];
   $("r-list").innerHTML = res.ranking
@@ -158,7 +175,7 @@ function showResult(res) {
     <div class="flex items-center gap-3 rounded-xl px-3 py-2 ${r.tg_id === myId ? "bg-warning/15" : "bg-base-200/60"}">
       <span class="w-7 text-lg">${medal[r.place - 1] || r.place}</span>
       <span class="flex-1 truncate font-semibold">${esc(r.name)}</span>
-      <span class="text-sm">✓ ${r.correct}/${TOTAL} · ${(r.timeMs / 1000).toFixed(1)}s</span>
+      <span class="text-sm">✓ ${r.correct}/${TOTAL} · ${(r.timeMs / 1000).toFixed(1)}s · ${r.net > 0 ? "+" : ""}${r.net}</span>
     </div>`,
     )
     .join("");
@@ -172,7 +189,10 @@ document.addEventListener("click", () => {
 inputEl.addEventListener("input", (e) => {
   if (locked || !current) return clearInput();
 
-  const val = e.target.value.toLowerCase().replace(/\s/g, "").slice(0, current.length);
+  const val = e.target.value
+    .toLowerCase()
+    .replace(/\s/g, "")
+    .slice(0, current.length);
   if (e.target.value !== val) e.target.value = val;
   e.target.setSelectionRange(val.length, val.length);
   paint(val);
@@ -206,7 +226,8 @@ inputEl.addEventListener("input", (e) => {
 $("skip-btn").addEventListener("mousedown", (e) => e.preventDefault());
 $("skip-btn").addEventListener("click", (e) => {
   e.stopPropagation();
-  if (current && !locked && socket) socket.emit("skip", { roomId, index: current.index });
+  if (current && !locked && socket)
+    socket.emit("skip", { roomId, index: current.index });
 });
 
 // ---------- Hisob-kitob oldidan sanoq ----------
@@ -260,7 +281,9 @@ function setupSocket() {
       setState("error");
       if (answer) paint(cleanWord(answer));
       setMessage(
-        kind === "timeout" ? `Vaqt tugadi! (${answer})` : `O'tkazildi (${answer})`,
+        kind === "timeout"
+          ? `Vaqt tugadi! (${answer})`
+          : `O'tkazildi (${answer})`,
         "error",
       );
       shake();
@@ -279,7 +302,9 @@ function setupSocket() {
 // ---------- Boshlash ----------
 (async () => {
   if (!hasAuth) {
-    notify("Bu sahifa Telegram ichida ochilishi kerak. Brauzerda sinash uchun manzil oxiriga ?dev=101 qo'shing.");
+    notify(
+      "Bu sahifa Telegram ichida ochilishi kerak. Brauzerda sinash uchun manzil oxiriga ?dev=101 qo'shing.",
+    );
     return;
   }
   try {

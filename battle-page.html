@@ -66,7 +66,7 @@
                 <span class="ico">⚔️</span>
                 <b>6 kishilik Battle</b>
                 <small
-                  >Kirish 5 <i class="coin"></i><br />G'olib +25
+                  >Kirish 5 <i class="coin"></i><br />1-o'rin +10
                   <i class="coin"></i
                 ></small>
               </button>
@@ -74,7 +74,7 @@
                 <span class="ico">🥊</span>
                 <b>1 vs 1</b>
                 <small
-                  >Stavka 40 <i class="coin"></i><br />G'olib +40
+                  >Kirish 8 <i class="coin"></i><br />G'olib +15
                   <i class="coin"></i
                 ></small>
               </button>
@@ -197,10 +197,10 @@
       </p>
 
       <div class="bt-box">
-        <p class="t">Kredit: 50 tanga</p>
+        <p class="t">Kredit: 45 tanga</p>
         <p class="d">
-          Faqat hisob 0 bo'lganda, kuniga 1 marta. Hisobingiz 100 ga yetganda
-          qarzdan 50 tanga yechiladi.
+          Faqat hisob 0 bo'lganda, kuniga 1 marta. Hisobingiz 90 ga yetganda
+          qarzdan 45 tanga yechiladi.
         </p>
         <button id="credit-btn" class="bt-btn primary sm block">
           Kredit olish
@@ -214,10 +214,64 @@
           Donatning 50% qismi moddiy qiyinchilikdagi bolalarning ingliz tili
           kurslariga yo'naltiriladi.
         </p>
-        <button class="bt-btn outline sm block" disabled>Tez orada</button>
+        <button id="buy-btn" class="bt-btn primary sm block">
+          Sotib olish
+        </button>
       </div>
 
       <button id="modal-close" class="bt-btn outline block">Yopish</button>
+    </dialog>
+
+    <dialog id="pay-modal" class="bt-modal">
+      <h3 class="bt-title" style="margin: 0 0 12px">+100 tanga sotib olish</h3>
+
+      <p class="bt-label">
+        1. Pulni o'tkazing · <span id="pay-amount"></span> so'm
+      </p>
+      <div class="bt-box" style="margin-top: 6px">
+        <p
+          id="pay-card"
+          class="t"
+          style="font-size: 20px; letter-spacing: 0.06em"
+        ></p>
+        <p id="pay-owner" class="d" style="margin: 2px 0 8px"></p>
+        <button class="bt-btn outline sm block" data-copy="pay-card">
+          Karta raqamini nusxalash
+        </button>
+      </div>
+
+      <p class="bt-label">2. Sizning shaxsiy kodingiz</p>
+      <div class="bt-box" style="margin-top: 6px">
+        <p id="pay-code" class="bt-code"></p>
+        <button
+          class="bt-btn outline sm block"
+          style="margin-top: 8px"
+          data-copy="pay-code"
+        >
+          Kodni nusxalash
+        </button>
+      </div>
+
+      <p class="bt-label">3. Chekni yuboring</p>
+      <p class="bt-sub" style="white-space: normal; margin: 6px 0 10px">
+        Chek rasmi, kodingiz va <b>Ism Familiyangizni</b>
+        <b id="pay-contact"></b> ga yuboring. Pul tasdiqlangach tangalar
+        hisobingizga qo'shiladi.
+      </p>
+      <button id="copy-msg" class="bt-btn outline sm block">
+        Tayyor xabarni nusxalash
+      </button>
+      <a
+        id="pay-link"
+        class="bt-btn primary block"
+        style="margin-top: 8px"
+        target="_blank"
+        rel="noopener"
+        >Chekni yuborish</a
+      >
+      <button id="pay-close" class="bt-btn ghost block" style="margin-top: 6px">
+        Yopish
+      </button>
     </dialog>
 
     <script src="./js/battle.js" type="module"></script>

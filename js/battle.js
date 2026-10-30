@@ -6,13 +6,14 @@ import {
   hasAuth,
   debugInfo,
 } from "./battle-api.js";
+import { PAY } from "./config.js";
 
 const $ = (id) => document.getElementById(id);
 const COIN = '<i class="coin"></i>';
 
 const MODE_INFO = {
   battle6: { title: "⚔️ 6 kishilik Battle", fee: 5, cap: 6 },
-  duel: { title: "🥊 1 vs 1", fee: 40, cap: 2 },
+  duel: { title: "🥊 1 vs 1", fee: 8, cap: 2 },
 };
 
 let me = null;
@@ -319,12 +320,77 @@ $("plus-btn").addEventListener("click", async () => {
 
 $("modal-close").addEventListener("click", () => $("coin-modal").close());
 
+// ---------- Sotib olish ----------
+function fallbackCopy(text) {
+  const ta = document.createElement("textarea");
+  ta.value = text;
+  ta.style.cssText = "position:fixed;opacity:0";
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand("copy");
+  } catch {}
+  ta.remove();
+}
+
+async function copyText(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    fallbackCopy(text);
+  }
+}
+
+async function copyWithFeedback(btn, text) {
+  await copyText(text);
+  const old = btn.textContent;
+  btn.textContent = "Nusxalandi ✓";
+  setTimeout(() => (btn.textContent = old), 1500);
+}
+
+const fullName = () => me.first_name + (me.last_name ? " " + me.last_name : "");
+
+$("buy-btn").addEventListener("click", () => {
+  $("pay-card").textContent = PAY.card;
+  $("pay-card").dataset.raw = PAY.card.replace(/\s/g, "");
+  $("pay-owner").textContent = PAY.owner;
+  $("pay-amount").textContent = PAY.amount;
+  $("pay-code").textContent = me.pay_code;
+  $("pay-contact").textContent = "@" + PAY.contact;
+  $("pay-link").href = `https://t.me/${PAY.contact}`;
+  $("coin-modal").close();
+  $("pay-modal").showModal();
+});
+
+$("pay-link").addEventListener("click", (e) => {
+  if (tg?.openTelegramLink && tg.initData) {
+    e.preventDefault();
+    tg.openTelegramLink(`https://t.me/${PAY.contact}`);
+  }
+});
+
+document.querySelectorAll("[data-copy]").forEach((btn) =>
+  btn.addEventListener("click", () => {
+    const el = $(btn.dataset.copy);
+    copyWithFeedback(btn, el.dataset.raw ?? el.textContent);
+  }),
+);
+
+$("copy-msg").addEventListener("click", (e) => {
+  copyWithFeedback(
+    e.currentTarget,
+    `Kod: ${me.pay_code}\nIsm Familiya: ${fullName()}\nSumma: ${PAY.amount} so'm (${PAY.coins} tanga)`,
+  );
+});
+
+$("pay-close").addEventListener("click", () => $("pay-modal").close());
+
 $("credit-btn").addEventListener("click", async () => {
   try {
     await api("/api/credit", { method: "POST" });
     $("coin-modal").close();
     await refreshMe();
-    notify("Hisobingizga 50 tanga qo'shildi!");
+    notify("Hisobingizga 45 tanga qo'shildi!");
   } catch (e) {
     notify(e.message);
   }

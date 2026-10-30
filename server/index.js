@@ -25,8 +25,8 @@ const sb = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY, {
 
 const LEVELS = ["a1", "a2", "b1", "b2", "c1", "c2"];
 const MODES = {
-  battle6: { capacity: 6, fee: 5 },
-  duel: { capacity: 2, fee: 40 },
+  battle6: { capacity: 6, fee: 5, bonus: [10, 7, 5, -3, -3, -3] },
+  duel: { capacity: 2, fee: 8, bonus: [15, -5] },
 };
 const WORDS_PER_GAME = 20;
 const TIME_LIMIT = 15000;
@@ -253,7 +253,7 @@ app.get(
     const { data: me } = await sb
       .from("players")
       .select(
-        "tg_id,first_name,last_name,username,photo_url,coins,debt,last_credit_date,wins,games,name_set",
+        "tg_id,first_name,last_name,username,photo_url,coins,debt,last_credit_date,wins,games,name_set,pay_code",
       )
       .eq("tg_id", req.user.id)
       .single();
@@ -429,7 +429,7 @@ async function startGame(roomId) {
     const { data: room, error } = await sb
       .from("rooms")
       .select(
-        "id,levels,entry_fee,room_players(tg_id,players(first_name,username))",
+        "id,mode,levels,entry_fee,room_players(tg_id,players(first_name,username))",
       )
       .eq("id", roomId)
       .single();
@@ -437,6 +437,7 @@ async function startGame(roomId) {
 
     const g = {
       roomId,
+      mode: room.mode,
       fee: room.entry_fee,
       words: pickWords(room.levels, WORDS_PER_GAME),
       startAt: Date.now() + START_DELAY,
@@ -556,6 +557,9 @@ async function settle(g) {
       (a.finishedAt ?? Infinity) - (b.finishedAt ?? Infinity),
   );
 
+  const bonus = MODES[g.mode].bonus;
+  const netOf = (i) => bonus[i] ?? bonus[bonus.length - 1];
+
   try {
     await rpc("settle_room", {
       p_room: g.roomId,
@@ -564,6 +568,7 @@ async function settle(g) {
         correct: p.correct,
         time_ms: p.timeMs,
       })),
+      p_bonus: bonus,
     });
   } catch (e) {
     console.error("settle xatosi:", e);
@@ -571,7 +576,6 @@ async function settle(g) {
 
   g.result = {
     fee: g.fee,
-    pot: g.fee * g.players.size,
     ranking: ranked.map((p, i) => ({
       place: i + 1,
       tg_id: p.tgId,
@@ -579,6 +583,7 @@ async function settle(g) {
       username: p.username,
       correct: p.correct,
       timeMs: p.timeMs,
+      net: netOf(i),
     })),
   };
   for (const id of g.players.keys())
