@@ -1,1 +1,1 @@
-export const API_URL = "https://SIZNING-APP.onrender.com";
+export const API_URL = "https://dictionary-test-mini-app.onrender.com";
