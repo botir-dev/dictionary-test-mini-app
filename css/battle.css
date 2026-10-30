@@ -1,0 +1,494 @@
+:root {
+  --bt-warn: var(--color-warning, #fbbd23);
+  --bt-warn-c: var(--color-warning-content, #1a1300);
+  --bt-prim: var(--color-primary, #6366f1);
+  --bt-ok: var(--color-success, #22c55e);
+  --bt-err: var(--color-error, #ef4444);
+  --bt-b1: var(--color-base-100, #1d232a);
+  --bt-b2: var(--color-base-200, #191e24);
+  --bt-b3: var(--color-base-300, #15191e);
+  --bt-txt: var(--color-base-content, #e5e7eb);
+}
+
+[hidden] {
+  display: none !important;
+}
+
+.bt-page {
+  min-height: 100dvh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 16px;
+  background: var(--bt-b2);
+  color: var(--bt-txt);
+}
+.bt-card {
+  width: 100%;
+  max-width: 560px;
+  background: var(--bt-b1);
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+}
+.bt-strip {
+  height: 6px;
+  background: linear-gradient(
+    90deg,
+    var(--bt-warn),
+    var(--bt-prim),
+    var(--bt-ok)
+  );
+}
+.bt-inner {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 22px;
+}
+.bt-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.bt-label {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.6;
+  font-weight: 600;
+}
+.bt-title {
+  font-weight: 800;
+  font-size: 18px;
+}
+
+/* ---------- Tanga belgisi ---------- */
+.coin {
+  position: relative;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  vertical-align: -0.14em;
+  background: radial-gradient(circle at 32% 28%, #fff3b0, #f7c531 45%, #d89b00);
+  box-shadow:
+    inset 0 0 0 0.1em #c28a00,
+    0 0 0 1px rgba(0, 0, 0, 0.15);
+}
+.coin::after {
+  content: "";
+  position: absolute;
+  inset: 0.28em;
+  border-radius: 50%;
+  border: 0.08em solid rgba(160, 105, 0, 0.7);
+}
+
+/* ---------- Profil ---------- */
+.bt-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.bt-user {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.bt-user-info {
+  min-width: 0;
+}
+.bt-name {
+  font-weight: 800;
+  font-size: 17px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bt-sub {
+  font-size: 12px;
+  opacity: 0.6;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bt-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: var(--bt-warn);
+  background: color-mix(in oklab, var(--bt-warn) 22%, transparent);
+}
+.bt-avatar.lg {
+  width: 52px;
+  height: 52px;
+  font-size: 20px;
+}
+
+.bt-coins {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 4px 4px 12px;
+  border-radius: 999px;
+  flex-shrink: 0;
+  background: color-mix(in oklab, var(--bt-warn) 14%, transparent);
+  font-weight: 800;
+}
+.bt-plus {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 0;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bt-warn);
+  color: var(--bt-warn-c);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.bt-plus:active {
+  transform: scale(0.9);
+}
+
+/* ---------- Rejim kartochkalari ---------- */
+.bt-modes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.bt-mode {
+  text-align: left;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  padding: 16px;
+  border-radius: 20px;
+  border: 2px solid var(--bt-b3);
+  background: linear-gradient(
+    160deg,
+    color-mix(in oklab, var(--bt-warn) 10%, var(--bt-b1)),
+    var(--bt-b1)
+  );
+  transition:
+    transform 0.15s,
+    border-color 0.15s;
+}
+.bt-mode:hover {
+  border-color: var(--bt-warn);
+  transform: translateY(-2px);
+}
+.bt-mode:active {
+  transform: scale(0.98);
+}
+.bt-mode .ico {
+  font-size: 34px;
+  line-height: 1;
+}
+.bt-mode b {
+  display: block;
+  margin-top: 8px;
+  font-size: 16px;
+  font-weight: 800;
+}
+.bt-mode small {
+  display: block;
+  margin-top: 4px;
+  font-size: 12px;
+  opacity: 0.7;
+  line-height: 1.5;
+}
+
+/* ---------- Tablar ---------- */
+.bt-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 14px;
+  background: var(--bt-b2);
+}
+.bt-tab {
+  flex: 1;
+  padding: 8px 4px;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  opacity: 0.65;
+  transition: all 0.15s;
+}
+.bt-tab.active {
+  background: var(--bt-b1);
+  opacity: 1;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.2);
+}
+
+/* ---------- Ro'yxat qatorlari ---------- */
+.bt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bt-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--bt-b2);
+}
+.bt-row.me {
+  background: color-mix(in oklab, var(--bt-warn) 16%, transparent);
+}
+.bt-rank {
+  width: 26px;
+  text-align: center;
+  font-weight: 800;
+  opacity: 0.8;
+}
+.bt-grow {
+  flex: 1;
+  min-width: 0;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bt-val {
+  font-weight: 800;
+  white-space: nowrap;
+}
+.bt-empty {
+  text-align: center;
+  opacity: 0.6;
+  font-size: 14px;
+  padding: 16px 0;
+}
+
+/* ---------- Tugmalar ---------- */
+.bt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 18px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+  transition:
+    transform 0.12s,
+    opacity 0.12s;
+}
+.bt-btn:active:not(:disabled) {
+  transform: scale(0.97);
+}
+.bt-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.bt-btn.block {
+  width: 100%;
+}
+.bt-btn.sm {
+  padding: 8px 14px;
+  font-size: 14px;
+  border-radius: 12px;
+}
+.bt-btn.primary {
+  background: var(--bt-warn);
+  color: var(--bt-warn-c);
+}
+.bt-btn.outline {
+  border-color: var(--bt-b3);
+}
+.bt-btn.danger {
+  border-color: var(--bt-err);
+  color: var(--bt-err);
+}
+.bt-btn.ghost {
+  opacity: 0.75;
+}
+
+/* ---------- Xona yaratish ---------- */
+.bt-panel {
+  padding: 16px;
+  border-radius: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  background: var(--bt-b2);
+  border: 1px solid var(--bt-b3);
+}
+.bt-lvls {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 8px;
+}
+.bt-lvl {
+  padding: 10px 0;
+  border-radius: 12px;
+  border: 2px solid var(--bt-b3);
+  background: var(--bt-b1);
+  color: inherit;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.bt-lvl.on {
+  background: var(--bt-warn);
+  border-color: var(--bt-warn);
+  color: var(--bt-warn-c);
+  transform: scale(1.06);
+}
+.bt-hint {
+  font-size: 12px;
+  opacity: 0.65;
+  min-height: 16px;
+}
+
+/* ---------- Xonalar ro'yxati ---------- */
+.bt-room {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 18px;
+  border: 1px solid var(--bt-b3);
+  background: var(--bt-b2);
+}
+.bt-room-main {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+.bt-room-info {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.bt-chips {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+.bt-badge {
+  padding: 1px 8px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid var(--bt-warn);
+  color: var(--bt-warn);
+}
+.bt-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  opacity: 0.75;
+}
+.bt-slots {
+  display: inline-flex;
+  gap: 3px;
+}
+.bt-slot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--bt-b3);
+}
+.bt-slot.on {
+  background: var(--bt-warn);
+}
+
+/* ---------- Kutish ---------- */
+.bt-center {
+  text-align: center;
+  align-items: center;
+}
+.bt-pulse {
+  font-size: 52px;
+  animation: bt-pulse 1.6s ease-in-out infinite;
+}
+@keyframes bt-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.12);
+    opacity: 0.7;
+  }
+}
+
+/* ---------- Xabarlar va oyna ---------- */
+.bt-alert {
+  padding: 14px;
+  border-radius: 16px;
+  font-size: 14px;
+  line-height: 1.5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  align-items: flex-start;
+  background: color-mix(in oklab, var(--bt-err) 14%, transparent);
+  border: 1px solid color-mix(in oklab, var(--bt-err) 45%, transparent);
+}
+dialog.bt-modal {
+  border: 0;
+  border-radius: 24px;
+  padding: 20px;
+  margin: auto;
+  width: min(92vw, 420px);
+  background: var(--bt-b1);
+  color: var(--bt-txt);
+}
+dialog.bt-modal::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+}
+.bt-box {
+  padding: 14px;
+  border-radius: 16px;
+  border: 1px solid var(--bt-b3);
+  margin-bottom: 12px;
+}
+.bt-box p {
+  margin: 0;
+}
+.bt-box .t {
+  font-weight: 800;
+}
+.bt-box .d {
+  font-size: 12px;
+  opacity: 0.7;
+  margin: 4px 0 10px;
+  line-height: 1.5;
+}
+.bt-debt {
+  color: var(--bt-err);
+}

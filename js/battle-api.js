@@ -13,7 +13,13 @@ const initData =
   tg?.initData ||
   (devId ? "dev:" + JSON.stringify({ id: Number(devId), first_name: "Test" + devId }) : "");
 
+export const hasAuth = Boolean(initData);
+
+const NO_AUTH =
+  "Bu sahifa Telegram ichida (bot orqali) ochilishi kerak. Brauzerda sinash uchun manzil oxiriga ?dev=101 qo'shing.";
+
 export async function api(path, { method = "GET", body } = {}) {
+  if (!hasAuth) throw new Error(NO_AUTH);
   const res = await fetch(API_URL + path, {
     method,
     headers: { "Content-Type": "application/json", "x-init-data": initData },
@@ -27,7 +33,16 @@ export async function api(path, { method = "GET", body } = {}) {
 export const connectSocket = () =>
   window.io(API_URL, { auth: { initData }, transports: ["websocket", "polling"] });
 
-export const notify = (msg) => (tg?.showAlert ? tg.showAlert(msg) : alert(msg));
+// Telegram ichida (6.2+) chiroyli oyna, boshqa joyda oddiy alert
+export function notify(msg) {
+  try {
+    if (tg?.initData && tg.isVersionAtLeast?.("6.2")) {
+      tg.showAlert(msg);
+      return;
+    }
+  } catch {}
+  alert(msg);
+}
 
 export const esc = (s) =>
   String(s ?? "").replace(/[&<>"']/g, (c) =>

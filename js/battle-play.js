@@ -1,8 +1,11 @@
-import { api, connectSocket, notify, esc } from "./battle-api.js";
+import { api, connectSocket, notify, esc, hasAuth } from "./battle-api.js";
 
 const $ = (id) => document.getElementById(id);
+const LOBBY = "../battle-game.html";
+const TOTAL = 20;
+
 const roomId = new URLSearchParams(location.search).get("room");
-if (!roomId) location.href = "../battle-game.html";
+if (!roomId) location.href = LOBBY;
 
 const boxesEl = $("boxes");
 const inputEl = $("word-input");
@@ -14,20 +17,32 @@ const STATES = {
   success: ["border-success", "bg-success/10", "text-success"],
   error: ["border-error", "bg-error/10", "text-error"],
 };
-const ALL = ["border-warning", "border-success", "border-error", "bg-success/10", "bg-error/10", "text-success", "text-error"];
+const ALL = [
+  "border-warning",
+  "border-success",
+  "border-error",
+  "bg-success/10",
+  "bg-error/10",
+  "text-success",
+  "text-error",
+];
 const ACTIVE = ["ring-2", "ring-warning/50", "-translate-y-1"];
 
 let myId = null;
-let current = null; // {index, length}
+let socket = null;
+let current = null; // { index, length }
 let locked = true;
 let boxState = "warning";
 let deadline = 0;
 let tick = null;
 let cdTimer = null;
 let ended = false;
+let lastPlayers = [];
 
 const spans = () => boxesEl.querySelectorAll("span");
+const cleanWord = (s) => String(s).toLowerCase().replace(/[\s'’-]/g, "");
 
+// ---------- Katakchalar ----------
 function setState(s) {
   boxState = s;
   spans().forEach((sp) => {
@@ -67,17 +82,21 @@ function show(name) {
 
 // ---------- Jonli reyting ----------
 function renderBoard(players) {
+  lastPlayers = players;
   const sorted = [...players].sort((a, b) => b.correct - a.correct || b.idx - a.idx);
+
   $("board").innerHTML = sorted
-    .map(
-      (p) => `
+    .map((p) => {
+      const pct = Math.round(((p.finished ? TOTAL : p.idx) / TOTAL) * 100);
+      return `
     <div class="flex items-center gap-2 text-sm ${p.tg_id === myId ? "font-bold" : ""}">
       <span class="w-24 truncate">${esc(p.name)}${p.tg_id === myId ? " (siz)" : ""}</span>
-      <div class="bar flex-1"><i style="width:${Math.round(((p.finished ? 20 : p.idx) / 20) * 100)}%"></i></div>
+      <div class="bar flex-1"><i style="width:${pct}%"></i></div>
       <span class="w-10 text-right">✓ ${p.correct}</span>
-    </div>`,
-    )
+    </div>`;
+    })
     .join("");
+
   const me = players.find((p) => p.tg_id === myId);
   if (me) $("score-badge").textContent = `✓ ${me.correct}`;
 }
@@ -121,13 +140,15 @@ function showResult(res) {
   if (ended) return;
   ended = true;
   clearInterval(tick);
+  clearInterval(cdTimer);
   show("result");
 
   const mine = res.ranking.find((r) => r.tg_id === myId);
   const won = mine?.place === 1;
-  $("r-emoji").textContent = won ? "🏆" : mine?.place === 2 ? "🥈" : "🏁";
+
+  $("r-emoji").textContent = won ? "🏆" : mine?.place === 2 ? "🥈" : mine?.place === 3 ? "🥉" : "🏁";
   $("r-title").textContent = won ? "Siz g'olibsiz!" : `${mine?.place ?? "-"}-o'rin`;
-  $("r-coins").textContent = won ? `+${res.pot - res.fee} 🪙` : `-${res.fee} 🪙`;
+  $("r-coins").textContent = won ? `+${res.pot - res.fee} tanga` : `-${res.fee} tanga`;
   $("r-coins").className = "font-bold mt-1 " + (won ? "text-success" : "text-error");
 
   const medal = ["🥇", "🥈", "🥉"];
@@ -137,7 +158,7 @@ function showResult(res) {
     <div class="flex items-center gap-3 rounded-xl px-3 py-2 ${r.tg_id === myId ? "bg-warning/15" : "bg-base-200/60"}">
       <span class="w-7 text-lg">${medal[r.place - 1] || r.place}</span>
       <span class="flex-1 truncate font-semibold">${esc(r.name)}</span>
-      <span class="text-sm">✓ ${r.correct}/20 · ${(r.timeMs / 1000).toFixed(1)}s</span>
+      <span class="text-sm">✓ ${r.correct}/${TOTAL} · ${(r.timeMs / 1000).toFixed(1)}s</span>
     </div>`,
     )
     .join("");
@@ -166,6 +187,7 @@ inputEl.addEventListener("input", (e) => {
       setMessage("Xato, qayta urinib ko'ring", "error");
       shake();
       setTimeout(() => {
+        if (!current) return;
         clearInput();
         setState("warning");
         paint("");
@@ -173,6 +195,9 @@ inputEl.addEventListener("input", (e) => {
         locked = false;
         inputEl.focus();
       }, 700);
+    } else if (!res?.ok) {
+      // So'z allaqachon yopilgan yoki vaqt o'tgan: server yangi holatni yuboradi
+      locked = false;
     }
     // To'g'ri bo'lsa, "word:result" hodisasi holatni o'zgartiradi
   });
@@ -181,63 +206,87 @@ inputEl.addEventListener("input", (e) => {
 $("skip-btn").addEventListener("mousedown", (e) => e.preventDefault());
 $("skip-btn").addEventListener("click", (e) => {
   e.stopPropagation();
-  if (current && !locked) socket.emit("skip", { roomId, index: current.index });
+  if (current && !locked && socket) socket.emit("skip", { roomId, index: current.index });
 });
+
+// ---------- Hisob-kitob oldidan sanoq ----------
+function startCountdown(ms) {
+  show("countdown");
+  const end = performance.now() + ms;
+  clearInterval(cdTimer);
+  const upd = () => {
+    const s = Math.ceil((end - performance.now()) / 1000);
+    $("cd-num").textContent = Math.max(s, 0);
+    if (s <= 0) clearInterval(cdTimer);
+  };
+  upd();
+  cdTimer = setInterval(upd, 200);
+}
 
 // ---------- Socket ----------
-const socket = connectSocket();
+function setupSocket() {
+  socket = connectSocket();
 
-socket.on("connect", () => {
-  socket.emit("game:ready", { roomId }, (res) => {
-    if (res?.error) {
-      notify(res.error);
-      return (location.href = "../battle-game.html");
-    }
-    renderBoard(res.players);
-    if (res.result) return showResult(res.result);
-    if (res.finished) return show("waiting");
+  socket.on("connect", () => {
+    socket.emit("game:ready", { roomId }, (res) => {
+      if (res?.error) {
+        notify(res.error);
+        location.href = LOBBY;
+        return;
+      }
+      renderBoard(res.players);
+      if (res.result) return showResult(res.result);
+      if (res.finished) return show("waiting");
+      if (res.startsInMs > 0) startCountdown(res.startsInMs);
+    });
+  });
 
-    if (res.startsInMs > 0) {
-      show("countdown");
-      const end = performance.now() + res.startsInMs;
-      clearInterval(cdTimer);
-      cdTimer = setInterval(() => {
-        const s = Math.ceil((end - performance.now()) / 1000);
-        $("cd-num").textContent = Math.max(s, 0);
-        if (s <= 0) clearInterval(cdTimer);
-      }, 200);
+  socket.on("connect_error", () => {
+    if (!ended) setMessage("Ulanishda muammo, qayta ulanmoqda...", "error");
+  });
+
+  socket.on("word:show", (w) => {
+    clearInterval(cdTimer);
+    showWord(w);
+  });
+
+  socket.on("word:result", ({ kind, answer }) => {
+    locked = true;
+    clearInterval(tick);
+    if (kind === "correct") {
+      setState("success");
+      setMessage("To'g'ri! 🎉", "success");
+    } else {
+      setState("error");
+      if (answer) paint(cleanWord(answer));
+      setMessage(
+        kind === "timeout" ? `Vaqt tugadi! (${answer})` : `O'tkazildi (${answer})`,
+        "error",
+      );
+      shake();
     }
   });
-});
 
-socket.on("word:show", (w) => {
-  clearInterval(cdTimer);
-  showWord(w);
-});
+  socket.on("game:progress", renderBoard);
+  socket.on("game:done", () => {
+    clearInterval(tick);
+    current = null;
+    show("waiting");
+  });
+  socket.on("game:result", showResult);
+}
 
-socket.on("word:result", ({ kind, answer }) => {
-  locked = true;
-  clearInterval(tick);
-  const word = answer ? answer.toLowerCase().replace(/[\s'’-]/g, "") : null;
-  if (kind === "correct") {
-    setState("success");
-    setMessage("To'g'ri! 🎉", "success");
-  } else {
-    setState("error");
-    if (word) paint(word);
-    setMessage(kind === "timeout" ? `Vaqt tugadi! (${answer})` : `O'tkazildi (${answer})`, "error");
-    shake();
-  }
-});
-
-socket.on("game:progress", renderBoard);
-socket.on("game:done", () => show("waiting"));
-socket.on("game:result", showResult);
-
+// ---------- Boshlash ----------
 (async () => {
+  if (!hasAuth) {
+    notify("Bu sahifa Telegram ichida ochilishi kerak. Brauzerda sinash uchun manzil oxiriga ?dev=101 qo'shing.");
+    return;
+  }
   try {
     myId = (await api("/api/me")).me.tg_id;
   } catch (e) {
     notify(e.message);
+    return;
   }
+  setupSocket();
 })();

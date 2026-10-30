@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="uz">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Battle | Dictionary game</title>
+    <link rel="stylesheet" href="./output.css" />
+    <link rel="stylesheet" href="./css/battle.css" />
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  </head>
+  <body class="bt-page">
+    <main class="bt-card">
+      <div class="bt-strip"></div>
+
+      <div class="bt-inner">
+        <!-- Profil + tangalar -->
+        <header class="bt-head">
+          <div class="bt-user">
+            <div id="avatar"><span class="bt-avatar lg">?</span></div>
+            <div class="bt-user-info">
+              <p id="p-name" class="bt-name">Yuklanmoqda...</p>
+              <p id="p-user" class="bt-sub"></p>
+              <p id="p-stats" class="bt-sub"></p>
+            </div>
+          </div>
+          <div class="bt-coins">
+            <span><i class="coin"></i> <span id="coins">0</span></span>
+            <button id="plus-btn" class="bt-plus" aria-label="Tanga qo'shish">
+              +
+            </button>
+          </div>
+        </header>
+
+        <div id="error-box" class="bt-alert" hidden></div>
+
+        <!-- HOME -->
+        <section id="view-home" class="bt-inner" style="padding: 0">
+          <div class="bt-section">
+            <p class="bt-label">Rejimni tanlang</p>
+            <div class="bt-modes">
+              <button class="bt-mode" data-mode="battle6">
+                <span class="ico">⚔️</span>
+                <b>6 kishilik Battle</b>
+                <small
+                  >Kirish 5 <i class="coin"></i><br />G'olib +25
+                  <i class="coin"></i
+                ></small>
+              </button>
+              <button class="bt-mode" data-mode="duel">
+                <span class="ico">🥊</span>
+                <b>1 vs 1</b>
+                <small
+                  >Stavka 40 <i class="coin"></i><br />G'olib +40
+                  <i class="coin"></i
+                ></small>
+              </button>
+            </div>
+          </div>
+
+          <div class="bt-section">
+            <p class="bt-label">Reyting</p>
+            <div class="bt-tabs" id="lb-tabs">
+              <button class="bt-tab active" data-lb="wins">🏆 G'oliblar</button>
+              <button class="bt-tab" data-lb="coins">Boylar</button>
+              <button class="bt-tab" data-lb="active">🔥 Faollar</button>
+            </div>
+            <div id="lb-list" class="bt-list"></div>
+          </div>
+
+          <a href="./index.html" class="bt-btn ghost sm block"
+            >← Oddiy testga qaytish</a
+          >
+        </section>
+
+        <!-- MODE -->
+        <section id="view-mode" class="bt-inner" style="padding: 0" hidden>
+          <div class="bt-head">
+            <button id="back-home" class="bt-btn ghost sm">← Orqaga</button>
+            <h2 id="mode-title" class="bt-title"></h2>
+          </div>
+
+          <div class="bt-panel">
+            <p class="bt-label">O'yin yaratish · darajani tanlang</p>
+            <div class="bt-lvls" id="lvl-grid">
+              <button class="bt-lvl" data-l="a1" aria-pressed="false">
+                A1
+              </button>
+              <button class="bt-lvl" data-l="a2" aria-pressed="false">
+                A2
+              </button>
+              <button class="bt-lvl" data-l="b1" aria-pressed="false">
+                B1
+              </button>
+              <button class="bt-lvl" data-l="b2" aria-pressed="false">
+                B2
+              </button>
+              <button class="bt-lvl" data-l="c1" aria-pressed="false">
+                C1
+              </button>
+              <button class="bt-lvl" data-l="c2" aria-pressed="false">
+                C2
+              </button>
+            </div>
+            <p class="bt-hint">
+              Bir nechta daraja tanlasangiz, 20 ta so'z ular orasida teng
+              bo'linadi.
+            </p>
+            <button id="create-btn" class="bt-btn primary block">
+              ➕ O'yin yaratish
+            </button>
+            <p id="create-hint" class="bt-hint"></p>
+          </div>
+
+          <div class="bt-section">
+            <p class="bt-label">Mavjud o'yinlar</p>
+            <div id="rooms" class="bt-list"></div>
+          </div>
+        </section>
+
+        <!-- WAIT -->
+        <section
+          id="view-wait"
+          class="bt-inner bt-center"
+          style="padding: 0"
+          hidden
+        >
+          <div class="bt-pulse">⏳</div>
+          <h2 class="bt-title">Raqiblar kutilmoqda...</h2>
+          <p id="wait-meta" class="bt-sub"></p>
+          <div
+            id="wait-levels"
+            class="bt-chips"
+            style="justify-content: center"
+          ></div>
+          <div id="wait-players" class="bt-list" style="width: 100%"></div>
+          <button id="leave-btn" class="bt-btn danger block">
+            Chiqish (tanga qaytariladi)
+          </button>
+        </section>
+      </div>
+    </main>
+
+    <!-- Tangalar oynasi -->
+    <dialog id="coin-modal" class="bt-modal">
+      <h3 class="bt-title" style="margin: 0 0 4px">
+        <i class="coin"></i> Tangalar
+      </h3>
+      <p class="bt-sub" style="margin-bottom: 14px; white-space: normal">
+        Hisobingiz: <b id="m-coins">0</b>
+        <span id="m-debt" class="bt-debt"></span>
+      </p>
+
+      <div class="bt-box">
+        <p class="t">Kredit: 50 tanga</p>
+        <p class="d">
+          Faqat hisob 0 bo'lganda, kuniga 1 marta. Hisobingiz 100 ga yetganda
+          qarzdan 50 tanga yechiladi.
+        </p>
+        <button id="credit-btn" class="bt-btn primary sm block">
+          Kredit olish
+        </button>
+        <p id="credit-note" class="bt-hint" style="margin-top: 6px"></p>
+      </div>
+
+      <div class="bt-box">
+        <p class="t">+100 tanga · 10 000 so'm</p>
+        <p class="d">
+          Donatning 50% qismi moddiy qiyinchilikdagi bolalarning ingliz tili
+          kurslariga yo'naltiriladi.
+        </p>
+        <button class="bt-btn outline sm block" disabled>Tez orada</button>
+      </div>
+
+      <button id="modal-close" class="bt-btn outline block">Yopish</button>
+    </dialog>
+
+    <script src="./js/battle.js" type="module"></script>
+  </body>
+</html>
